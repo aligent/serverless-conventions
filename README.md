@@ -3,16 +3,11 @@
 A [Serverless framework](https://www.serverless.com) plugin to enforce various formatting conventions to maintain consistency within Serverless applications.
 
 ## List of conventions
-<!-- 
-TO BE IMPLEMENTED
-
-| Function names must be in camel case | thisIsAWellNamedExample | ThisIsABadlyNamedExample |
-| Handler names must be dash delimited | src/this-is-a-well-named-example.handler | src/ThisIsABadlyNamedExample.handler |
--->
-
 | Convention | Good Example | Bad Example |
 | --- | --- | --- |
 | Handler names must have the same name as the function | functions:<br>&nbsp;thisIsAWellNamedExample:<br>&nbsp;&nbsp;handler: src/this-is-a-well-named-example.handler | functions:<br>&nbsp;thisIsABadlyNamedFunction:<br>&nbsp;&nbsp;handler: src/this-is-a-badly-named-example.handler |
+| Function names must be in camel case | thisIsAWellNamedExample | ThisIsABadlyNamedExample |
+| Handler names must be dash delimited | src/this-is-a-well-named-example.handler | src/ThisIsABadlyNamedExample.handler |
 
 
 ## Serverless configuration
