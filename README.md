@@ -1,5 +1,8 @@
 # Serverless Conventions Plugin
 
+[![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
+[![npm version](https://badge.fury.io/js/@aligent%2Fserverless-conventions.svg)](https://badge.fury.io/js/@aligent%2Fserverless-conventions)
+
 A [Serverless framework](https://www.serverless.com) plugin to enforce various formatting conventions to maintain consistency within Serverless applications.
 
 ## List of conventions
