@@ -4,16 +4,34 @@
   "description": "A Serverless framework plugin to enforce various formatting conventions to maintain consistency within Serverless applications.",
   "main": "src/index.js",
   "types": "index.d.ts",
+  "jest": {
+    "preset": "ts-jest",
+    "collectCoverage": true,
+    "collectCoverageFrom": [ 
+      "./src/*.ts" 
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 60,
+        "functions": 60,
+        "lines": 60,
+        "statements": 60
+      }
+    }
+  },
   "scripts": {
     "build": "tsc",
     "prepublish": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "devDependencies": {
     "@types/node": "^16.3.3",
     "@types/serverless": "^1.78.29",
     "ts-node": "^10.0.0",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "jest": "^27.3.1",
+    "ts-jest": "27.0.7",
+    "@types/jest":" ^27.0.2"
   },
   "peerDependencies": {
     "serverless": "2.x"
