@@ -1,5 +1,5 @@
-import ServerlessConventions = require("../src");
-import Serverless = require("serverless");
+import {ServerlessConventions} from "../src/index";
+import Serverless from "serverless";
 
 describe('Test conventions plugin', () => {
     const provider : Serverless.Options = {

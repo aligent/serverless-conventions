@@ -1,18 +1,18 @@
-import Serverless = require("serverless");
+import Serverless from "serverless";
 import { Options } from "serverless";
-import { Server } from "http";
-const chalk = require('chalk');
+import chalk from 'chalk';
 import { camelCase, paramCase as kebabCase } from "change-case";
-import { stringify } from "querystring";
 
 
-export = class ServerlessConventions {
+export class ServerlessConventions {
      serverless: Serverless;
      hooks: { [key: string]: Function }
      config: any
+     options: Options
 
      constructor(serverless: Serverless, options: Options) {
           this.serverless = serverless;
+          this.options = options;
           this.config = '';
 
           this.hooks = {
