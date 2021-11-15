@@ -6,13 +6,29 @@ describe('Test conventions plugin', () => {
         stage: 'test',
         region: 'ap-southeast-2'
     };
+
+    // Log any cli events to jest
+    const cli = {
+        log: jest.fn(),
+    }
+
     // Create an empty serverless instance 
     const serverless : Serverless = new Serverless(provider);
+    serverless.cli = cli;
 
     // Create a serverless conventions instance
     const ServerlessConvention: ServerlessConventions = new ServerlessConventions(
         serverless, provider
     );
+
+    describe('Integration test', () => {
+        test('Initialize function valid serverless.yml', async () => {
+            // Run the initialize function
+            expect(() => { 
+                ServerlessConvention.initialize()
+            }).not.toThrowError();
+        });
+    });
 
     describe('Test handler name checker', () => {
         test('Incorrect handler name', async () => {

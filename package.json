@@ -6,6 +6,7 @@
   "types": "index.d.ts",
   "jest": {
     "preset": "ts-jest",
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
     "collectCoverage": true,
     "coverageThreshold": {
       "global": {
