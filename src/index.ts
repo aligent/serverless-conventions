@@ -1,18 +1,18 @@
-import Serverless = require("serverless");
+import Serverless from "serverless";
 import { Options } from "serverless";
-import { Server } from "http";
-const chalk = require('chalk');
+import chalk from 'chalk';
 import { camelCase, paramCase as kebabCase } from "change-case";
-import { stringify } from "querystring";
 
 
-class ServerlessConventions {
+export class ServerlessConventions {
      serverless: Serverless;
      hooks: { [key: string]: Function }
      config: any
+     options: Options
 
      constructor(serverless: Serverless, options: Options) {
           this.serverless = serverless;
+          this.options = options;
           this.config = '';
 
           this.hooks = {
@@ -75,7 +75,7 @@ class ServerlessConventions {
      checkFunctionName(fn: Serverless.FunctionDefinitionHandler) : Array<string> {
           let errors : Array<string> = [];
           // Get the function name and strip the service name and stage from it
-          const fnName = fn.name?.split(this.serverless.service.provider.stage + "-")[1] as string;
+          const fnName = fn.name?.split(this.serverless.service.provider.stage + "-").pop() as string;
 
           // Check that the function name is in camel case
           if (fnName !== camelCase(fnName)) {
@@ -90,7 +90,7 @@ class ServerlessConventions {
      checkHandlerNameMatchesFunction(fn: Serverless.FunctionDefinitionHandler) : Array<string> {
           let errors : Array<string> = [];
           // Get the function name and strip the service name and stage from it
-          const fnName = fn.name?.split(this.serverless.service.provider.stage + "-")[1] as string;
+          const fnName = fn.name?.split(this.serverless.service.provider.stage + "-").pop() as string;
 
           // Get handler name removing any path and the .handler extension
           const handler = fn.handler.split('/').pop()?.replace('.handler', '') as string;
@@ -103,5 +103,3 @@ class ServerlessConventions {
           return errors;
      }
 }
-
-module.exports = ServerlessConventions;
