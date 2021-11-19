@@ -11,6 +11,7 @@ A [Serverless framework](https://www.serverless.com) plugin to enforce various f
 | Handler names must have the same name as the function | functions:<br>&nbsp;thisIsAWellNamedExample:<br>&nbsp;&nbsp;handler: src/this-is-a-well-named-example.handler | functions:<br>&nbsp;thisIsABadlyNamedFunction:<br>&nbsp;&nbsp;handler: src/this-is-a-badly-named-example.handler |
 | Function names must be in camel case | thisIsAWellNamedExample | ThisIsABadlyNamedExample |
 | Handler names must be dash delimited | src/this-is-a-well-named-example.handler | src/ThisIsABadlyNamedExample.handler |
+| DynamoDB table names must be in snake case | good_table_name | BadTableName |
 
 
 ## Serverless configuration
