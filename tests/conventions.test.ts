@@ -1,5 +1,6 @@
 import {ServerlessConventions} from "../src/index";
 import Serverless from "serverless";
+import Aws from "serverless/plugins/aws/provider/awsProvider";
 
 describe('Test conventions plugin', () => {
     const provider : Serverless.Options = {
@@ -186,6 +187,45 @@ describe('Test conventions plugin', () => {
             };
 
             errors = ServerlessConvention.checkHandlerNameMatchesFunction(fn);
+            expect(errors.length).toBe(0);
+        });
+    });
+
+    describe('Test DynamoDB table name checker', () => {
+        test('Incorrect table name', async () => {
+            // DynamoDB table name should be in snake case
+            let resource : Aws.CloudFormationResource = {
+                Type: 'AWS::DynamoDB::Table',
+                Properties: {
+                    'tableName': 'bad-table-name'
+                }
+            }
+
+            let errors = ServerlessConvention.checkDynamoDBTableName(resource);
+            expect(errors.pop()).toMatch('is not snake case');
+
+            // DynamoDB table name should be in snake case
+            resource = {
+                Type: 'AWS::DynamoDB::Table',
+                Properties: {
+                    'tableName': 'Bad_table_name'
+                }
+            }
+
+            errors = ServerlessConvention.checkDynamoDBTableName(resource);
+            expect(errors.pop()).toMatch('is not snake case');
+        });
+
+        test('Correct table name', async () => {
+            // DynamoDB table name should be in snake case
+            const resource : Aws.CloudFormationResource = {
+                Type: 'AWS::DynamoDB::Table',
+                Properties: {
+                    'tableName': 'good_table_name'
+                }
+            }
+
+            let errors = ServerlessConvention.checkDynamoDBTableName(resource);
             expect(errors.length).toBe(0);
         });
     });
