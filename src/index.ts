@@ -3,6 +3,7 @@ import { Options } from "serverless";
 import chalk from 'chalk';
 import { camelCase, paramCase as kebabCase, snakeCase } from "change-case";
 import Aws from "serverless/plugins/aws/provider/awsProvider";
+import Service from "serverless/classes/Service";
 
 
 export class ServerlessConventions {
@@ -24,6 +25,9 @@ export class ServerlessConventions {
      initialize() {
           // Check that all the conventions are followed and build a list of errors
           let errors: Array<string> = []
+
+          errors = errors.concat(this.checkServiceName(this.serverless.service));
+
           const functionNames = this.serverless.service.getAllFunctions();
           functionNames.forEach(fnName => {
                const fn = this.serverless.service.getFunction(fnName) as Serverless.FunctionDefinitionHandler;
@@ -54,6 +58,26 @@ export class ServerlessConventions {
           }
           
           this.serverless.cli.log(chalk.green('Function check complete! No errors were found.'));
+     }
+
+     // Service name validation
+     // Must be kebab-case (dash delimited)
+     // Must not contain the word "service"
+     checkServiceName(service: Service) : Array<string> {
+          let errors : Array<string> = [];
+          const serviceName = service.getServiceName() as string;
+
+          // Check that the service name is in kebab case
+          if (serviceName !== kebabCase(serviceName)) {
+               errors.push(`Warning: Service name "${serviceName}" is not kebab case (dash delimited)`);
+          }
+
+          // Check that the service name does not contain the word "service"
+          if (serviceName.toLowerCase().includes('service')) {
+               errors.push(`Warning: Service name should not include the word "service"`);
+          }
+
+          return errors;
      }
 
      // Handler name conventions
