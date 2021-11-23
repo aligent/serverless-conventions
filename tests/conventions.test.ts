@@ -2,9 +2,9 @@ import {ServerlessConventions} from "../src/index";
 import Serverless from "serverless";
 
 describe('Test conventions plugin', () => {
-    const provider : Serverless.Options = {
+    const options : Serverless.Options = {
         stage: 'test',
-        region: 'ap-southeast-2'
+        region: 'ap-southeast-2',
     };
 
     // Log any cli events to jest
@@ -12,13 +12,26 @@ describe('Test conventions plugin', () => {
         log: jest.fn(),
     }
 
-    // Create an empty serverless instance 
-    const serverless : Serverless = new Serverless(provider);
+    // Create a valid serverless instance 
+    const serverless : Serverless = new Serverless({options});
     serverless.cli = cli;
+    serverless.service.provider.stage = 'test';
+    // Return a service name
+    serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
+
+    // A good function and handler name
+    let fn : Serverless.FunctionDefinitionHandler = {
+        name: 'thisIsAWellNamedFunction',
+        handler: "src/this-is-a-well-named-function.handler",
+        events: []
+    };
+
+    serverless.service.getAllFunctions = jest.fn().mockReturnValue(['thisIsAWellNamedFunction']);
+    serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
     // Create a serverless conventions instance
     const ServerlessConvention: ServerlessConventions = new ServerlessConventions(
-        serverless, provider
+        serverless, options
     );
 
     describe('Integration test', () => {
@@ -27,6 +40,57 @@ describe('Test conventions plugin', () => {
             expect(() => { 
                 ServerlessConvention.initialize()
             }).not.toThrowError();
+        });
+
+        test('Initialize function invalid serverless.yml', async () => {
+            // Invalid service name
+            serverless.service.getServiceName = jest.fn().mockReturnValue('test-service');
+
+            // Bad function and handler name
+            let fn : Serverless.FunctionDefinitionHandler = {
+                name: 'ThisIsABadlyNamedFunction',
+                handler: "src/this-is-a-badly-named-example",
+                events: []
+            };
+
+            serverless.service.getAllFunctions = jest.fn().mockReturnValue(['ThisIsABadlyNamedFunction']);
+            serverless.service.getFunction = jest.fn().mockReturnValue(fn);
+
+            // Create another serverless instance with bad data
+            const BadServerlessConvention: ServerlessConventions = new ServerlessConventions(
+                serverless, options
+            );
+            // Run the initialize function
+            expect(() => { 
+                BadServerlessConvention.initialize()
+            }).toThrowError();
+        });
+    });
+
+    describe('Test service name checker', () => {
+        test('Incorrect service name', async () => {
+            // Not kebab case
+            serverless.service.getServiceName = function () { return 'testName' };
+            let errors = ServerlessConvention.checkServiceName(serverless.service);
+            expect(errors.pop()).toMatch('is not kebab case');
+
+            // No word "service" in the name
+            serverless.service.getServiceName = function () { return 'test-service' };
+            errors = ServerlessConvention.checkServiceName(serverless.service);
+            expect(errors.pop()).toMatch('not include the word "service"');
+
+            // Both not kebab case and word "service" in the name
+            serverless.service.getServiceName = function () { return 'testService' };
+            errors = ServerlessConvention.checkServiceName(serverless.service);
+            expect(errors.pop()).toMatch('not include the word "service"');
+            expect(errors.pop()).toMatch('is not kebab case');
+        });
+
+        test('Correct service name', async () => {
+            // Valid service name
+            serverless.service.getServiceName = function () { return 'test-name' };
+            let errors = ServerlessConvention.checkServiceName(serverless.service);
+            expect(errors.length).toBe(0);
         });
     });
 
