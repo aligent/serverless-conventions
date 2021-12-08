@@ -26,11 +26,13 @@ export class ServerlessConventions {
           let errors: Array<string> = []
 
           errors = errors.concat(this.checkServiceName(this.serverless.service));
+          errors = errors.concat(this.checkIAMDeploymentRole(this.serverless.service));
+          console.log(JSON.stringify(this.serverless.service.provider));
 
           const functionNames = this.serverless.service.getAllFunctions();
           functionNames.forEach(fnName => {
                const fn = this.serverless.service.getFunction(fnName) as Serverless.FunctionDefinitionHandler;
-
+               
                errors = errors.concat(this.checkHandlerName(fn));
                errors = errors.concat(this.checkFunctionName(fn));
                errors = errors.concat(this.checkHandlerNameMatchesFunction(fn));
@@ -66,6 +68,19 @@ export class ServerlessConventions {
           }
 
           return errors;
+     }
+
+     // Cloud formation service role validation
+     // Confirm that the service contains an iam deployment role
+     checkIAMDeploymentRole(service: Service) : Array<string> {
+          let errors : Array<string> = [];
+          const roles = service.provider;
+
+          errors.push(JSON.stringify(roles));
+          console.log(JSON.stringify(roles));
+          errors.push(`Warning: Service provider must contain a cloud formation service role`)
+
+          return errors; 
      }
 
      // Handler name conventions

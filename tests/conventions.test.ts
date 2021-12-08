@@ -18,6 +18,16 @@ describe('Test conventions plugin', () => {
     serverless.service.provider.stage = 'test';
     // Return a service name
     serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
+    // Set some basic provider information
+    serverless.service.provider = {
+        compiledCloudFormationTemplate: {
+            Resources: {}
+        },
+        name: 'aws',
+        stage: 'test',
+        region: 'ap-southeast-2',
+        versionFunctions: false
+    }
 
     // A good function and handler name
     let fn : Serverless.FunctionDefinitionHandler = {
@@ -90,6 +100,24 @@ describe('Test conventions plugin', () => {
             // Valid service name
             serverless.service.getServiceName = function () { return 'test-name' };
             let errors = ServerlessConvention.checkServiceName(serverless.service);
+            expect(errors.length).toBe(0);
+        });
+    });
+
+    describe('Test cloudformation validation checker', () => {
+        test('Cloud formation service role does not exist', async () => {
+            // Does not exist
+            
+
+            let errors = ServerlessConvention.checkIAMDeploymentRole(serverless.service);
+            expect(errors.pop()).toMatch('must contain a cloud formation service role');
+        });
+
+        test('Cloud formation service role exists', async () => {
+            // Exists
+
+
+            let errors = ServerlessConvention.checkIAMDeploymentRole(serverless.service);
             expect(errors.length).toBe(0);
         });
     });
