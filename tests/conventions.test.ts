@@ -19,6 +19,19 @@ describe('Test conventions plugin', () => {
     serverless.service.provider.stage = 'test';
     // Return a service name
     serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
+    // Set some basic provider information
+    serverless.service.provider = {
+        compiledCloudFormationTemplate: {
+            Resources: {}
+        },
+        name: 'aws',
+        stage: 'test',
+        region: 'ap-southeast-2',
+        versionFunctions: false,
+        iam: {
+            deploymentRole: 'arn:aws:iam::185310451239:role/example.serverless' // This is not a working CFN role
+        }
+    } as any
 
     // Create some example resources
     const resource : CloudFormationResource = {
@@ -124,6 +137,38 @@ describe('Test conventions plugin', () => {
             // Valid service name
             serverless.service.getServiceName = function () { return 'test-name' };
             let errors = ServerlessConvention.checkServiceName(serverless.service);
+            expect(errors.length).toBe(0);
+        });
+    });
+
+    describe('Test cloudformation validation checker', () => {
+        test('Cloud formation service role does not exist', async () => {
+            // Does not exist
+            (<any>serverless.service.provider).iam = undefined;
+
+            let errors = ServerlessConvention.checkIAMDeploymentRole(serverless.service);
+            expect(errors.pop()).toMatch('missing a valid cloud formation service role');
+        });
+
+        test('Cloud formation service role is invalid', async () => {
+            // Typo in the arn (not enough numbers)
+            (<any>serverless.service.provider).iam = { deploymentRole: 'arn:aws:iam::1554:role/example.serverless' };
+
+            let errors = ServerlessConvention.checkIAMDeploymentRole(serverless.service);
+            expect(errors.pop()).toMatch('must contain a valid cloud formation service role');
+
+            // Using a user instead of a role
+            (<any>serverless.service.provider).iam = { deploymentRole: 'arn:aws:iam::185310451239:user/example.serverless' };
+
+            errors = ServerlessConvention.checkIAMDeploymentRole(serverless.service);
+            expect(errors.pop()).toMatch('must contain a valid cloud formation service role');
+        });
+
+        test('Cloud formation service role exists', async () => {
+            // Exists and is valid
+            (<any>serverless.service.provider).iam = { deploymentRole: 'arn:aws:iam::185917455239:role/example.serverless' };
+
+            let errors = ServerlessConvention.checkIAMDeploymentRole(serverless.service);
             expect(errors.length).toBe(0);
         });
     });

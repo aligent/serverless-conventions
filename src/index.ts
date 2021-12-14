@@ -27,6 +27,7 @@ export class ServerlessConventions {
           let errors: Array<string> = []
 
           errors = errors.concat(this.checkServiceName(this.serverless.service));
+          errors = errors.concat(this.checkIAMDeploymentRole(this.serverless.service));
 
           const functionNames = this.serverless.service.getAllFunctions();
           functionNames.forEach(fnName => {
@@ -53,10 +54,10 @@ export class ServerlessConventions {
                errors.forEach(error => {
                     this.serverless.cli.log(chalk.red(error));
                });
-               
+
                throw Error('Serverless conventions validation failed');
           }
-          
+
           this.serverless.cli.log(chalk.green('Function check complete! No errors were found.'));
      }
 
@@ -75,6 +76,29 @@ export class ServerlessConventions {
           // Check that the service name does not contain the word "service"
           if (serviceName.toLowerCase().includes('service')) {
                errors.push(`Warning: Service name should not include the word "service"`);
+          }
+
+          return errors;
+     }
+
+     // Cloud formation service role validation
+     // Confirm that the service contains an iam deployment role
+     checkIAMDeploymentRole(service: Service) : Array<string> {
+          let errors : Array<string> = [];
+          const regex = new RegExp('^arn:aws:iam::\\d{12}:role\\/.+');
+
+          // This is a bit of a messy way to get the iam
+          // Ideally it would be typed in @types/serverless
+          const iam = (<any>service.provider).iam;
+
+          if (iam == null) {
+               errors.push(`Warning: Service provider is missing a valid cloud formation service role`);
+          } else {
+               const deployRole = iam.deploymentRole as string;
+
+               if (!regex.test(deployRole)) {
+                    errors.push(`Warning: Service provider must contain a valid cloud formation service role`);
+               }
           }
 
           return errors;
