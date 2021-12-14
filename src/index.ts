@@ -31,7 +31,7 @@ export class ServerlessConventions {
           const functionNames = this.serverless.service.getAllFunctions();
           functionNames.forEach(fnName => {
                const fn = this.serverless.service.getFunction(fnName) as Serverless.FunctionDefinitionHandler;
-               
+
                errors = errors.concat(this.checkHandlerName(fn));
                errors = errors.concat(this.checkFunctionName(fn));
                errors = errors.concat(this.checkHandlerNameMatchesFunction(fn));
@@ -42,10 +42,10 @@ export class ServerlessConventions {
                errors.forEach(error => {
                     this.serverless.cli.log(chalk.red(error));
                });
-               
+
                throw Error('Serverless conventions validation failed');
           }
-          
+
           this.serverless.cli.log(chalk.green('Function check complete! No errors were found.'));
      }
 
@@ -78,8 +78,8 @@ export class ServerlessConventions {
           // This is a bit of a messy way to get the iam
           // Ideally it would be typed in @types/serverless
           const iam = (<any>service.provider).iam;
-          
-          if (iam === undefined || iam === null) {
+
+          if (iam == null) {
                errors.push(`Warning: Service provider is missing a valid cloud formation service role`);
           } else {
                const deployRole = iam.deploymentRole as string;
@@ -89,7 +89,7 @@ export class ServerlessConventions {
                }
           }
 
-          return errors; 
+          return errors;
      }
 
      // Handler name conventions
