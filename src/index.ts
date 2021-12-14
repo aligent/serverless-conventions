@@ -1,7 +1,7 @@
 import Serverless from "serverless";
 import { Options } from "serverless";
 import chalk from 'chalk';
-import { camelCase, paramCase as kebabCase, snakeCase } from "change-case";
+import { camelCase, paramCase as kebabCase } from "change-case";
 import Aws from "serverless/plugins/aws/provider/awsProvider";
 import Service from "serverless/classes/Service";
 
@@ -44,7 +44,7 @@ export class ServerlessConventions {
 
                // Run different tests depending on the resource type
                if (resource.Type === 'AWS::DynamoDB::Table') {
-                    errors = errors.concat(this.checkDynamoDBTableName(resource));
+                    errors = errors.concat(this.checkDynamoDBTableName(resource, this.serverless.service.getServiceName()));
                }
           }
 
@@ -141,15 +141,22 @@ export class ServerlessConventions {
 
      // DynamoDB table name validation
      // DynamoDB table names should be in snake case
-     checkDynamoDBTableName(dynamodb: Aws.CloudFormationResource) : Array<string> {
+     checkDynamoDBTableName(dynamodb: Aws.CloudFormationResource, serviceName: string) : Array<string> {
           let errors : Array<string> = [];
 
           // Get the table name
           const tableName = dynamodb.Properties['tableName'] as string;
 
+          // Check it starts with the service name
+          const tableNameWithoutService = tableName.split(serviceName + '-').pop() as string;
+
+          if (tableName == tableNameWithoutService) {
+               errors.push(`Warning: DynamoDB table name "${tableName}" does not start with the service name`);
+          }
+
           // Check that the function name is in snake case
-          if (tableName !== snakeCase(tableName)) {
-               errors.push(`Warning: DynamoDB table name "${tableName}" is not snake case`);
+          if (tableName !== kebabCase(tableName)) {
+               errors.push(`Warning: DynamoDB table name "${tableName}" is not kebab case`);
           }
 
           return errors;

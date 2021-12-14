@@ -24,7 +24,7 @@ describe('Test conventions plugin', () => {
     const resource : CloudFormationResource = {
         Type: 'AWS::DynamoDB::Table',
         Properties: {
-            'tableName': 'good_table_name'
+            'tableName': 'test-name-good-table-name'
         }
     }
     serverless.resources = {
@@ -290,18 +290,19 @@ describe('Test conventions plugin', () => {
 
     describe('Test DynamoDB table name checker', () => {
         test('Incorrect table name', async () => {
+            serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
             // DynamoDB table name should be in snake case
             let resource : CloudFormationResource = {
                 Type: 'AWS::DynamoDB::Table',
                 Properties: {
-                    'tableName': 'bad-table-name'
+                    'tableName': 'test-name-bad_table_name'
                 }
             }
 
-            let errors = ServerlessConvention.checkDynamoDBTableName(resource);
-            expect(errors.pop()).toMatch('is not snake case');
+            let errors = ServerlessConvention.checkDynamoDBTableName(resource, serverless.service.getServiceName());
+            expect(errors.pop()).toMatch('is not kebab case');
 
-            // DynamoDB table name should be in snake case
+            // DynamoDB table name should be in snake case and start with the service name
             resource = {
                 Type: 'AWS::DynamoDB::Table',
                 Properties: {
@@ -309,20 +310,34 @@ describe('Test conventions plugin', () => {
                 }
             }
 
-            errors = ServerlessConvention.checkDynamoDBTableName(resource);
-            expect(errors.pop()).toMatch('is not snake case');
+            errors = ServerlessConvention.checkDynamoDBTableName(resource, serverless.service.getServiceName());
+            expect(errors.pop()).toMatch('is not kebab case');
+            expect(errors.pop()).toMatch('does not start with the service name');
+
+            // DynamoDB table name should start with the service name
+            resource = {
+                Type: 'AWS::DynamoDB::Table',
+                Properties: {
+                    'tableName': 'bad-table-name'
+                }
+            }
+
+            errors = ServerlessConvention.checkDynamoDBTableName(resource, serverless.service.getServiceName());
+            expect(errors.pop()).toMatch('does not start with the service name');
         });
 
         test('Correct table name', async () => {
+            serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
+
             // DynamoDB table name should be in snake case
             const resource : CloudFormationResource = {
                 Type: 'AWS::DynamoDB::Table',
                 Properties: {
-                    'tableName': 'good_table_name'
+                    'tableName': 'test-name-good-table-name'
                 }
             }
 
-            let errors = ServerlessConvention.checkDynamoDBTableName(resource);
+            let errors = ServerlessConvention.checkDynamoDBTableName(resource, serverless.service.getServiceName());
             expect(errors.length).toBe(0);
         });
     });
