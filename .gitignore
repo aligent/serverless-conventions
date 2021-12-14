@@ -8,6 +8,8 @@ jspm_packages
 # ESBuild directories
 .build
 *.js
+*.map
+
 
 # Coverage reports
 coverage

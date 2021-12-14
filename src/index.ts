@@ -27,7 +27,6 @@ export class ServerlessConventions {
 
           errors = errors.concat(this.checkServiceName(this.serverless.service));
           errors = errors.concat(this.checkIAMDeploymentRole(this.serverless.service));
-          console.log(JSON.stringify(this.serverless.service.provider));
 
           const functionNames = this.serverless.service.getAllFunctions();
           functionNames.forEach(fnName => {
@@ -74,11 +73,21 @@ export class ServerlessConventions {
      // Confirm that the service contains an iam deployment role
      checkIAMDeploymentRole(service: Service) : Array<string> {
           let errors : Array<string> = [];
-          const roles = service.provider;
+          const regex = new RegExp('^arn:aws:iam::\\d{12}:role\\/.+');
 
-          errors.push(JSON.stringify(roles));
-          console.log(JSON.stringify(roles));
-          errors.push(`Warning: Service provider must contain a cloud formation service role`)
+          // This is a bit of a messy way to get the iam
+          // Ideally it would be typed in @types/serverless
+          const iam = (<any>service.provider).iam;
+          
+          if (iam === undefined || iam === null) {
+               errors.push(`Warning: Service provider is missing a valid cloud formation service role`);
+          } else {
+               const deployRole = iam.deploymentRole as string;
+
+               if (!regex.test(deployRole)) {
+                    errors.push(`Warning: Service provider must contain a valid cloud formation service role`);
+               }
+          }
 
           return errors; 
      }
