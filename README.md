@@ -14,7 +14,8 @@ A [Serverless framework](https://www.serverless.com) plugin to enforce various f
 | Function names must be in camel case | thisIsAWellNamedExample | ThisIsABadlyNamedExample |
 | Handler names must be dash delimited | src/this-is-a-well-named-example.handler | src/ThisIsABadlyNamedExample.handler |
 | Handler names must end in ".handler" | src/this-is-a-well-named-example.handler | src/this-is-a-badly-named-example |
-| DynamoDB table names must be in snake case | good_table_name | BadTableName |
+| DynamoDB table names must be in kebab case | example-name-good-table-name | BadTableName |
+| DynamoDB table names must start with the service name | example-name-good-table-name | bad-table-name |
 
 ## Serverless configuration
 The plugin is configured within the `serverless.yaml` by adding the plugin to the list of plugins.
