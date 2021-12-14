@@ -2,6 +2,7 @@ import Serverless from "serverless";
 import { Options } from "serverless";
 import chalk from 'chalk';
 import { camelCase, paramCase as kebabCase } from "change-case";
+import Aws from "serverless/plugins/aws/provider/awsProvider";
 import Service from "serverless/classes/Service";
 
 
@@ -35,6 +36,17 @@ export class ServerlessConventions {
                errors = errors.concat(this.checkFunctionName(fn));
                errors = errors.concat(this.checkHandlerNameMatchesFunction(fn));
           });
+
+          // Loop through all the resources and run checks as required
+          const resources : Aws.CloudFormationResources = this.serverless.resources?.Resources;
+          for (const resourceKey in resources) {
+               const resource = resources[resourceKey];
+
+               // Run different tests depending on the resource type
+               if (resource.Type === 'AWS::DynamoDB::Table') {
+                    errors = errors.concat(this.checkDynamoDBTableName(resource, this.serverless.service.getServiceName()));
+               }
+          }
 
           // If there were errors detected, print out a list and throw an error
           if (errors.length !== 0) {
@@ -122,6 +134,29 @@ export class ServerlessConventions {
           // Create an error if the function does not match the handler name
           if (camelCase(fnName) !== camelCase(handler) && kebabCase(fnName) !== kebabCase(handler)) {
                errors.push(`Warning: Function "${fnName}" does not match handler name "${handler}.handler"`);
+          }
+
+          return errors;
+     }
+
+     // DynamoDB table name validation
+     // DynamoDB table names should be in snake case
+     checkDynamoDBTableName(dynamodb: Aws.CloudFormationResource, serviceName: string) : Array<string> {
+          let errors : Array<string> = [];
+
+          // Get the table name
+          const tableName = dynamodb.Properties['tableName'] as string;
+
+          // Check it starts with the service name
+          const tableNameWithoutService = tableName.split(serviceName + '-').pop() as string;
+
+          if (tableName == tableNameWithoutService) {
+               errors.push(`Warning: DynamoDB table name "${tableName}" does not start with the service name`);
+          }
+
+          // Check that the function name is in snake case
+          if (tableName !== kebabCase(tableName)) {
+               errors.push(`Warning: DynamoDB table name "${tableName}" is not kebab case`);
           }
 
           return errors;
