@@ -1,4 +1,4 @@
-import {ServerlessConventions} from "../src/index";
+import ServerlessConventions from "../src/index";
 import Serverless from "serverless";
 import { CloudFormationResource } from "serverless/plugins/aws/provider/awsProvider";
 
