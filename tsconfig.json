@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "lib": ["es2019"],
+    "lib": ["es2021"],
     "removeComments": true,
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": true,
-    "target": "es2017",
+    "target": "es2021",
     "outDir": "lib",
+    "module": "commonjs",
     "esModuleInterop": true,
     "typeRoots": ["./types", "./node_modules/@types"]
   },

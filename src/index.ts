@@ -6,7 +6,7 @@ import Aws from "serverless/plugins/aws/provider/awsProvider";
 import Service from "serverless/classes/Service";
 
 
-export class ServerlessConventions {
+export default class ServerlessConventions {
      serverless: Serverless;
      hooks: { [key: string]: Function }
      config: any
@@ -186,3 +186,5 @@ export class ServerlessConventions {
           return errors;
      }
 }
+
+module.exports = ServerlessConventions;
