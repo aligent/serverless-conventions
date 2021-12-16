@@ -2,7 +2,7 @@
   "name": "@aligent/serverless-conventions",
   "version": "0.1.0",
   "description": "A Serverless framework plugin to enforce various formatting conventions to maintain consistency within Serverless applications.",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "types": "index.d.ts",
   "jest": {
     "preset": "ts-jest",
@@ -39,6 +39,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "change-case": "^4.1.2"
+    "change-case": "^4.1.2",
+    "chalk": "^4.1.1"
   }
 }
