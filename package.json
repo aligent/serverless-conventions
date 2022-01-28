@@ -1,6 +1,6 @@
 {
   "name": "@aligent/serverless-conventions",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A Serverless framework plugin to enforce various formatting conventions to maintain consistency within Serverless applications.",
   "main": "lib/index.js",
   "types": "index.d.ts",
