@@ -26,5 +26,10 @@ plugins:
   - "@aligent/serverless-conventions"
 ```
 
+## Running the conventions check
+The conventions check will run automatically each time you run a serverless command that compiles the packages. (e.g. `serverless package`, `serverless deploy`)
+
+Alternatively, the conventions check can be run manually with `serverless conventions-check`.
+
 ## Example Output
 ![serverless output](/images/serverless_output.png)
