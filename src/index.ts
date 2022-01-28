@@ -20,6 +20,7 @@ export default class ServerlessConventions {
 
           this.commands = {
                'conventions-check': {
+                    usage: 'Runs the serverless conventions plugin',
                     lifecycleEvents: ['run'],
                },
           };
