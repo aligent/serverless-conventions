@@ -9,6 +9,7 @@ import Service from "serverless/classes/Service";
 export default class ServerlessConventions {
      serverless: Serverless;
      hooks: { [key: string]: Function }
+     commands: any
      config: any
      options: Options
 
@@ -17,8 +18,16 @@ export default class ServerlessConventions {
           this.options = options;
           this.config = '';
 
+          this.commands = {
+               'conventions-check': {
+                    usage: 'Runs the serverless conventions plugin',
+                    lifecycleEvents: ['run'],
+               },
+          };
+
           this.hooks = {
-               'before:package:compileFunctions': this.initialize.bind(this)
+               'before:package:compileFunctions': this.initialize.bind(this),
+               'conventions-check:run': () => this.initialize(),
           };
      }
 
