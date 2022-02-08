@@ -73,6 +73,7 @@ export default class ServerlessConventions {
      // Service name validation
      // Must be kebab-case (dash delimited)
      // Must not contain the word "service"
+     // TODO: Must be less than x characters
      checkServiceName(service: Service) : Array<string> {
           let errors : Array<string> = [];
           const serviceName = service.getServiceName() as string;
@@ -85,6 +86,11 @@ export default class ServerlessConventions {
           // Check that the service name does not contain the word "service"
           if (serviceName.toLowerCase().includes('service')) {
                errors.push(`Warning: Service name should not include the word "service"`);
+          }
+
+          // Check the length of the service name is not greater than x
+          if (serviceName.length > 255) {
+               errors.push(`Warning: Service name must be less than 255 characters`);
           }
 
           return errors;
