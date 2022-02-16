@@ -89,8 +89,8 @@ export default class ServerlessConventions {
           }
 
           // Check the length of the service name is not greater than x
-          if (serviceName.length > 255) {
-               errors.push(`Warning: Service name must be less than 255 characters`);
+          if (serviceName.length > 23) {
+               errors.push(`Warning: Service name must be less than 23 characters`);
           }
 
           return errors;
