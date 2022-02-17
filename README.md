@@ -17,6 +17,7 @@ A [Serverless framework](https://www.serverless.com) plugin to enforce various f
 | Handler names must end in ".handler" | src/this-is-a-well-named-example.handler | src/this-is-a-badly-named-example |
 | DynamoDB table names must be in kebab case | example-name-good-table-name | BadTableName |
 | DynamoDB table names must start with the service name | example-name-good-table-name | bad-table-name |
+| IAM deployment role must be valid | arn:aws:iam::123456789000:role/example.serverless | user/example.serverless |
 
 ## Serverless configuration
 The plugin is configured within the `serverless.yaml` by adding the plugin to the list of plugins.
@@ -24,6 +25,22 @@ The plugin is configured within the `serverless.yaml` by adding the plugin to th
 ```
 plugins:
   - "@aligent/serverless-conventions"
+```
+
+### Ignoring specific checks
+All checks can be ignored by specifying the check to ignore under a top level property named `conventions` in `serverless.yaml`.
+
+A list of all the available ignore commands are below:
+
+```
+conventions:
+  ignore:
+    serviceName: true
+    handlerName: true
+    functionName: true
+    handlerNameMatchesFunction: true
+    dynamoDBTableName: true
+    iamDeploymentRole: true
 ```
 
 ## Running the conventions check
