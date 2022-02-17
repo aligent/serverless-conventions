@@ -41,7 +41,7 @@ export default class ServerlessConventions {
                'conventions-check:run': () => this.initialize(),
           };
 
-          serverless.configSchemaHandler.defineTopLevelProperty('conventions', {
+          this.serverless.configSchemaHandler.defineTopLevelProperty('conventions', {
                type: 'object',
                properties: {
                     ignore: { type: 'object' },
@@ -52,10 +52,10 @@ export default class ServerlessConventions {
 
           // Make sure ignore is defined to prevent errors being from being thrown when referencing children
           if (this.conventionsConfig === undefined) {
-               this.conventionsConfig = {}
+               this.conventionsConfig = {};
           }
           if (this.conventionsConfig.ignore === undefined) {
-               this.conventionsConfig.ignore = {}
+               this.conventionsConfig.ignore = {};
           }
      }
 
