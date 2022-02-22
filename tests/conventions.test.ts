@@ -164,10 +164,11 @@ describe('Test conventions plugin', () => {
 
         test('Initialize function ignore service name check', async () => {
             let ServerlessConvention = createServerlessConvention();
-            ServerlessConvention.conventionsConfig.ignore = { serviceName: true };
+            // Ignore the service name check
+            ServerlessConvention.conventionsConfig.ignore.iamDeploymentRole = true;
 
-            // No word "service" in the name
-            ServerlessConvention.serverless.service.getServiceName = function () { return 'test-service' };
+            // Invalid iam role (this should be ignored so test should still pass)
+            (<any>ServerlessConvention.serverless.service.provider).iam = 'invalid_iam';
 
             expect(() => { 
                 ServerlessConvention.initialize()
