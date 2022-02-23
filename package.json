@@ -32,7 +32,7 @@
     "@types/jest": " ^27.0.2"
   },
   "peerDependencies": {
-    "serverless": "2.x"
+    "serverless": "2 || 3"
   },
   "engines": {
     "node": ">=10.0"
