@@ -10,7 +10,6 @@ A [Serverless framework](https://www.serverless.com) plugin to enforce various f
 | --- | --- | --- |
 | Service name must be dash delimited | this-is-a-good-name | thisIsABadName |
 | Service name must not contain the word "service" | this-is-a-good-name | this-is-a-bad-service | 
-| Service provider must contain a valid cloud formation role | iam:<br>&nbsp;deploymentRole: arn:aws:iam::############:role/valid.serverless | iam:<br>&nbsp;deploymentRole: arn:aws:iam::##:role/not-valid
 | Handler names must have the same name as the function | functions:<br>&nbsp;thisIsAWellNamedExample:<br>&nbsp;&nbsp;handler: src/this-is-a-well-named-example.handler | functions:<br>&nbsp;thisIsABadlyNamedFunction:<br>&nbsp;&nbsp;handler: src/this-is-a-badly-named-example.handler |
 | Function names must be in camel case | thisIsAWellNamedExample | ThisIsABadlyNamedExample |
 | Handler names must be dash delimited | src/this-is-a-well-named-example.handler | src/ThisIsABadlyNamedExample.handler |
