@@ -40,7 +40,7 @@ function createExampleServerless(): Serverless {
     }
     serverless.resources = {
         Resources: {'db': resource}
-    } 
+    }
 
     // A good function and handler name
     let fn : Serverless.FunctionDefinitionHandler = {
@@ -56,7 +56,7 @@ function createExampleServerless(): Serverless {
 }
 
 function createServerlessConvention(): ServerlessConventions {
-    // Create a valid serverless instance 
+    // Create a valid serverless instance
     const serverless : Serverless = createExampleServerless();
     const options : Serverless.Options = {
         stage: 'test',
@@ -76,7 +76,7 @@ describe('Test conventions plugin', () => {
         test('Initialize function valid serverless.yml', async () => {
             let ServerlessConvention = createServerlessConvention();
             // Run the initialize function
-            expect(() => { 
+            expect(() => {
                 ServerlessConvention.initialize()
             }).not.toThrowError();
         });
@@ -84,10 +84,10 @@ describe('Test conventions plugin', () => {
         test('Initialize function valid serverless.yml without resources', async () => {
             let ServerlessConvention = createServerlessConvention();
             // Remove all resources from serverless
-            ServerlessConvention.serverless.resources = {Resources: {}} 
+            ServerlessConvention.serverless.resources = {Resources: {}}
 
             // Run the initialize function
-            expect(() => { 
+            expect(() => {
                 ServerlessConvention.initialize()
             }).not.toThrowError();
         });
@@ -114,7 +114,7 @@ describe('Test conventions plugin', () => {
 
             serverless.resources = {
                 Resources: {'db': resource}
-            } 
+            }
 
             serverless.service.getAllFunctions = jest.fn().mockReturnValue(['ThisIsABadlyNamedFunction']);
             serverless.service.getFunction = jest.fn().mockReturnValue(fn);
@@ -125,7 +125,7 @@ describe('Test conventions plugin', () => {
             );
 
             // Run the initialize function
-            expect(() => { 
+            expect(() => {
                 BadServerlessConvention.initialize()
             }).toThrowError();
         });
@@ -142,7 +142,7 @@ describe('Test conventions plugin', () => {
                 }
             }
 
-            expect(() => { 
+            expect(() => {
                 ServerlessConvention.initialize()
             }).not.toThrowError();
         });
@@ -153,7 +153,7 @@ describe('Test conventions plugin', () => {
                 ignore: {}
             }
 
-            expect(() => { 
+            expect(() => {
                 ServerlessConvention.initialize()
             }).not.toThrowError();
         });
@@ -173,7 +173,7 @@ describe('Test conventions plugin', () => {
             ServerlessConvention.serverless.service.getAllFunctions = jest.fn().mockReturnValue(['thisIsAWellNamedFunction']);
             ServerlessConvention.serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
-            expect(() => { 
+            expect(() => {
                 ServerlessConvention.initialize()
             }).not.toThrowError();
         });
@@ -199,8 +199,8 @@ describe('Test conventions plugin', () => {
             expect(errors.pop()).toMatch('is not kebab case');
 
             // Both not kebab case and word "service" in the name
-            serverless.service.getServiceName = function () { return 'thisnameisverylongitshouldnotbethislongorelseitwontbeavalidnameidontknowwhatelsetowritehereas255charactersisalotofcharactersheressomerandomlygeneratedwordsedgecornerspacewhetherglasshorsemacaronichildrendictionarystickmultiplylookactstreetstraightbelleattaco' };
-            errors = ServerlessConvention.checkServiceName(serverless.service);
+            ServerlessConvention.serverless.service.getServiceName = function () { return 'thisnameisverylongitshouldnotbethislongorelseitwontbeavalidname' };
+            errors = ServerlessConvention.checkServiceName(ServerlessConvention.serverless.service);
             expect(errors.pop()).toMatch('name must be less than');
         });
 
