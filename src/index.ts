@@ -12,7 +12,6 @@ type ConventionsConfig = {
           functionName?: boolean,
           handlerNameMatchesFunction?: boolean,
           dynamoDBTableName?: boolean,
-          iamDeploymentRole?: boolean,
      }
 }
 
@@ -64,7 +63,6 @@ export default class ServerlessConventions {
           let errors: Array<string> = []
 
           errors = this.conventionsConfig.ignore.serviceName ? errors : errors.concat(this.checkServiceName(this.serverless.service));
-          errors = this.conventionsConfig.ignore.iamDeploymentRole ? errors : errors.concat(this.checkIAMDeploymentRole(this.serverless.service));
 
           const functionNames = this.serverless.service.getAllFunctions();
           functionNames.forEach(fnName => {
@@ -101,6 +99,7 @@ export default class ServerlessConventions {
      // Service name validation
      // Must be kebab-case (dash delimited)
      // Must not contain the word "service"
+     // Must be less 23 or less characters
      checkServiceName(service: Service): Array<string> {
           let errors: Array<string> = [];
           const serviceName = service.getServiceName() as string;
@@ -115,27 +114,9 @@ export default class ServerlessConventions {
                errors.push(`Warning: Service name should not include the word "service"`);
           }
 
-          return errors;
-     }
-
-     // Cloud formation service role validation
-     // Confirm that the service contains an iam deployment role
-     checkIAMDeploymentRole(service: Service): Array<string> {
-          let errors: Array<string> = [];
-          const regex = new RegExp('^arn:aws:iam::\\d{12}:role\\/.+');
-
-          // This is a bit of a messy way to get the iam
-          // Ideally it would be typed in @types/serverless
-          const iam = (<any>service.provider).iam;
-
-          if (iam == null) {
-               errors.push(`Warning: Service provider is missing a valid cloud formation service role`);
-          } else {
-               const deployRole = iam.deploymentRole as string;
-
-               if (!regex.test(deployRole)) {
-                    errors.push(`Warning: Service provider must contain a valid cloud formation service role`);
-               }
+          // Check the length of the service name is not greater than x
+          if (serviceName.length > 23) {
+               errors.push(`Warning: Service name must be less than 23 characters`);
           }
 
           return errors;

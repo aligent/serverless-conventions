@@ -1,6 +1,6 @@
 {
   "name": "@aligent/serverless-conventions",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A Serverless framework plugin to enforce various formatting conventions to maintain consistency within Serverless applications.",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -32,7 +32,7 @@
     "@types/jest": " ^27.0.2"
   },
   "peerDependencies": {
-    "serverless": "2.x"
+    "serverless": "2 || 3"
   },
   "engines": {
     "node": ">=10.0"

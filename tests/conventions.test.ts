@@ -29,9 +29,6 @@ function createExampleServerless(): Serverless {
         stage: 'test',
         region: 'ap-southeast-2',
         versionFunctions: false,
-        iam: {
-            deploymentRole: 'arn:aws:iam::185310451239:role/example.serverless' // This is not a working CFN role
-        }
     } as any
 
     // Create some example resources
@@ -194,6 +191,11 @@ describe('Test conventions plugin', () => {
             errors = ServerlessConvention.checkServiceName(ServerlessConvention.serverless.service);
             expect(errors.pop()).toMatch('not include the word "service"');
             expect(errors.pop()).toMatch('is not kebab case');
+
+            // Both not kebab case and word "service" in the name
+            serverless.service.getServiceName = function () { return 'thisnameisverylongitshouldnotbethislongorelseitwontbeavalidnameidontknowwhatelsetowritehereas255charactersisalotofcharactersheressomerandomlygeneratedwordsedgecornerspacewhetherglasshorsemacaronichildrendictionarystickmultiplylookactstreetstraightbelleattaco' };
+            errors = ServerlessConvention.checkServiceName(serverless.service);
+            expect(errors.pop()).toMatch('name must be less than');
         });
 
         test('Correct service name', async () => {
@@ -201,41 +203,6 @@ describe('Test conventions plugin', () => {
             // Valid service name
             ServerlessConvention.serverless.service.getServiceName = function () { return 'test-name' };
             let errors = ServerlessConvention.checkServiceName(ServerlessConvention.serverless.service);
-            expect(errors.length).toBe(0);
-        });
-    });
-
-    describe('Test cloudformation validation checker', () => {
-        test('Cloud formation service role does not exist', async () => {
-            let ServerlessConvention = createServerlessConvention();
-            // Does not exist
-            (<any>ServerlessConvention.serverless.service.provider).iam = undefined;
-
-            let errors = ServerlessConvention.checkIAMDeploymentRole(ServerlessConvention.serverless.service);
-            expect(errors.pop()).toMatch('missing a valid cloud formation service role');
-        });
-
-        test('Cloud formation service role is invalid', async () => {
-            let ServerlessConvention = createServerlessConvention();
-            // Typo in the arn (not enough numbers)
-            (<any>ServerlessConvention.serverless.service.provider).iam = { deploymentRole: 'arn:aws:iam::1554:role/example.serverless' };
-
-            let errors = ServerlessConvention.checkIAMDeploymentRole(ServerlessConvention.serverless.service);
-            expect(errors.pop()).toMatch('must contain a valid cloud formation service role');
-
-            // Using a user instead of a role
-            (<any>ServerlessConvention.serverless.service.provider).iam = { deploymentRole: 'arn:aws:iam::185310451239:user/example.serverless' };
-
-            errors = ServerlessConvention.checkIAMDeploymentRole(ServerlessConvention.serverless.service);
-            expect(errors.pop()).toMatch('must contain a valid cloud formation service role');
-        });
-
-        test('Cloud formation service role exists', async () => {
-            let ServerlessConvention = createServerlessConvention();
-            // Exists and is valid
-            (<any>ServerlessConvention.serverless.service.provider).iam = { deploymentRole: 'arn:aws:iam::185917455239:role/example.serverless' };
-
-            let errors = ServerlessConvention.checkIAMDeploymentRole(ServerlessConvention.serverless.service);
             expect(errors.length).toBe(0);
         });
     });
