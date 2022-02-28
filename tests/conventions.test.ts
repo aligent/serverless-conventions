@@ -139,7 +139,6 @@ describe('Test conventions plugin', () => {
                     functionName: true,
                     handlerNameMatchesFunction: true,
                     dynamoDBTableName: true,
-                    iamDeploymentRole: true,
                 }
             }
 
@@ -162,10 +161,17 @@ describe('Test conventions plugin', () => {
         test('Initialize function ignore service name check', async () => {
             let ServerlessConvention = createServerlessConvention();
             // Ignore the service name check
-            ServerlessConvention.conventionsConfig.ignore.iamDeploymentRole = true;
+            ServerlessConvention.conventionsConfig.ignore.handlerNameMatchesFunction = true;
 
-            // Invalid iam role (this should be ignored so test should still pass)
-            (<any>ServerlessConvention.serverless.service.provider).iam = 'invalid_iam';
+            // Handler does not match function name (this should be ignored so test should still pass)
+            let fn : Serverless.FunctionDefinitionHandler = {
+                name: 'thisIsAWellNamedFunction',
+                handler: "src/this-is-a-badly-named-function.handler",
+                events: []
+            };
+
+            ServerlessConvention.serverless.service.getAllFunctions = jest.fn().mockReturnValue(['thisIsAWellNamedFunction']);
+            ServerlessConvention.serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
             expect(() => { 
                 ServerlessConvention.initialize()
