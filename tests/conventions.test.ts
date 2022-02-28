@@ -128,6 +128,11 @@ describe('Test conventions plugin', () => {
             errors = ServerlessConvention.checkServiceName(serverless.service);
             expect(errors.pop()).toMatch('not include the word "service"');
             expect(errors.pop()).toMatch('is not kebab case');
+
+            // Both not kebab case and word "service" in the name
+            serverless.service.getServiceName = function () { return 'thisnameisverylongitshouldnotbethislongorelseitwontbeavalidnameidontknowwhatelsetowritehereas255charactersisalotofcharactersheressomerandomlygeneratedwordsedgecornerspacewhetherglasshorsemacaronichildrendictionarystickmultiplylookactstreetstraightbelleattaco' };
+            errors = ServerlessConvention.checkServiceName(serverless.service);
+            expect(errors.pop()).toMatch('name must be less than');
         });
 
         test('Correct service name', async () => {
