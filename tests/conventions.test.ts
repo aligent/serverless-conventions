@@ -2,7 +2,7 @@ import ServerlessConventions from "../src/index";
 import Serverless from "serverless";
 import { CloudFormationResource } from "serverless/plugins/aws/provider/awsProvider";
 
-describe('Test conventions plugin', () => {
+function createExampleServerless(): Serverless {
     const options : Serverless.Options = {
         stage: 'test',
         region: 'ap-southeast-2',
@@ -13,10 +13,11 @@ describe('Test conventions plugin', () => {
         log: jest.fn(),
     }
 
-    // Create a valid serverless instance 
-    const serverless : Serverless = new Serverless({options});
+    let serverless : Serverless = new Serverless({options});
+
     serverless.cli = cli;
     serverless.service.provider.stage = 'test';
+    serverless.service.initialServerlessConfig = {};
     // Return a service name
     serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
     // Set some basic provider information
@@ -39,7 +40,7 @@ describe('Test conventions plugin', () => {
     }
     serverless.resources = {
         Resources: {'db': resource}
-    } 
+    }
 
     // A good function and handler name
     let fn : Serverless.FunctionDefinitionHandler = {
@@ -51,30 +52,48 @@ describe('Test conventions plugin', () => {
     serverless.service.getAllFunctions = jest.fn().mockReturnValue(['thisIsAWellNamedFunction']);
     serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
+    return serverless;
+}
+
+function createServerlessConvention(): ServerlessConventions {
+    // Create a valid serverless instance
+    const serverless : Serverless = createExampleServerless();
+    const options : Serverless.Options = {
+        stage: 'test',
+        region: 'ap-southeast-2',
+    };
+
     // Create a serverless conventions instance
     const ServerlessConvention: ServerlessConventions = new ServerlessConventions(
         serverless, options
     );
 
+    return ServerlessConvention;
+}
+
+describe('Test conventions plugin', () => {
     describe('Integration test', () => {
         test('Initialize function valid serverless.yml', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // Run the initialize function
-            expect(() => { 
+            expect(() => {
                 ServerlessConvention.initialize()
             }).not.toThrowError();
         });
 
         test('Initialize function valid serverless.yml without resources', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // Remove all resources from serverless
-            serverless.resources = {Resources: {}} 
+            ServerlessConvention.serverless.resources = {Resources: {}}
 
             // Run the initialize function
-            expect(() => { 
+            expect(() => {
                 ServerlessConvention.initialize()
             }).not.toThrowError();
         });
 
         test('Initialize function invalid serverless.yml', async () => {
+            let serverless = createExampleServerless();
             // Invalid service name
             serverless.service.getServiceName = jest.fn().mockReturnValue('test-service');
 
@@ -95,56 +114,108 @@ describe('Test conventions plugin', () => {
 
             serverless.resources = {
                 Resources: {'db': resource}
-            } 
+            }
 
             serverless.service.getAllFunctions = jest.fn().mockReturnValue(['ThisIsABadlyNamedFunction']);
             serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
             // Create another serverless instance with bad data
             const BadServerlessConvention: ServerlessConventions = new ServerlessConventions(
-                serverless, options
+                serverless, { stage: 'test', region: 'ap-southeast-2' }
             );
+
             // Run the initialize function
-            expect(() => { 
+            expect(() => {
                 BadServerlessConvention.initialize()
             }).toThrowError();
+        });
+
+        test('Initialize function with all ignore fields set to true', async () => {
+            let ServerlessConvention = createServerlessConvention();
+            ServerlessConvention.conventionsConfig = {
+                ignore: {
+                    serviceName: true,
+                    handlerName: true,
+                    functionName: true,
+                    handlerNameMatchesFunction: true,
+                    dynamoDBTableName: true,
+                }
+            }
+
+            expect(() => {
+                ServerlessConvention.initialize()
+            }).not.toThrowError();
+        });
+
+        test('Initialize function with no ignore fields', async () => {
+            let ServerlessConvention = createServerlessConvention();
+            ServerlessConvention.conventionsConfig = {
+                ignore: {}
+            }
+
+            expect(() => {
+                ServerlessConvention.initialize()
+            }).not.toThrowError();
+        });
+
+        test('Initialize function ignore service name check', async () => {
+            let ServerlessConvention = createServerlessConvention();
+            // Ignore the service name check
+            ServerlessConvention.conventionsConfig.ignore.handlerNameMatchesFunction = true;
+
+            // Handler does not match function name (this should be ignored so test should still pass)
+            let fn : Serverless.FunctionDefinitionHandler = {
+                name: 'thisIsAWellNamedFunction',
+                handler: "src/this-is-a-badly-named-function.handler",
+                events: []
+            };
+
+            ServerlessConvention.serverless.service.getAllFunctions = jest.fn().mockReturnValue(['thisIsAWellNamedFunction']);
+            ServerlessConvention.serverless.service.getFunction = jest.fn().mockReturnValue(fn);
+
+            expect(() => {
+                ServerlessConvention.initialize()
+            }).not.toThrowError();
         });
     });
 
     describe('Test service name checker', () => {
         test('Incorrect service name', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // Not kebab case
-            serverless.service.getServiceName = function () { return 'testName' };
-            let errors = ServerlessConvention.checkServiceName(serverless.service);
+            ServerlessConvention.serverless.service.getServiceName = function () { return 'testName' };
+            let errors = ServerlessConvention.checkServiceName(ServerlessConvention.serverless.service);
             expect(errors.pop()).toMatch('is not kebab case');
 
             // No word "service" in the name
-            serverless.service.getServiceName = function () { return 'test-service' };
-            errors = ServerlessConvention.checkServiceName(serverless.service);
+            ServerlessConvention.serverless.service.getServiceName = function () { return 'test-service' };
+            errors = ServerlessConvention.checkServiceName(ServerlessConvention.serverless.service);
             expect(errors.pop()).toMatch('not include the word "service"');
 
             // Both not kebab case and word "service" in the name
-            serverless.service.getServiceName = function () { return 'testService' };
-            errors = ServerlessConvention.checkServiceName(serverless.service);
+            ServerlessConvention.serverless.service.getServiceName = function () { return 'testService' };
+            errors = ServerlessConvention.checkServiceName(ServerlessConvention.serverless.service);
             expect(errors.pop()).toMatch('not include the word "service"');
             expect(errors.pop()).toMatch('is not kebab case');
 
             // Both not kebab case and word "service" in the name
-            serverless.service.getServiceName = function () { return 'thisnameisverylongitshouldnotbethislongorelseitwontbeavalidnameidontknowwhatelsetowritehereas255charactersisalotofcharactersheressomerandomlygeneratedwordsedgecornerspacewhetherglasshorsemacaronichildrendictionarystickmultiplylookactstreetstraightbelleattaco' };
-            errors = ServerlessConvention.checkServiceName(serverless.service);
+            ServerlessConvention.serverless.service.getServiceName = function () { return 'thisnameisverylongitshouldnotbethislongorelseitwontbeavalidname' };
+            errors = ServerlessConvention.checkServiceName(ServerlessConvention.serverless.service);
             expect(errors.pop()).toMatch('name must be less than');
         });
 
         test('Correct service name', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // Valid service name
-            serverless.service.getServiceName = function () { return 'test-name' };
-            let errors = ServerlessConvention.checkServiceName(serverless.service);
+            ServerlessConvention.serverless.service.getServiceName = function () { return 'test-name' };
+            let errors = ServerlessConvention.checkServiceName(ServerlessConvention.serverless.service);
             expect(errors.length).toBe(0);
         });
     });
 
     describe('Test handler name checker', () => {
         test('Incorrect handler name', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // Not kebab case
             let fn : Serverless.FunctionDefinitionHandler = {
                 name: 'thisIsABadlyNamedExample',
@@ -187,6 +258,7 @@ describe('Test conventions plugin', () => {
         });
 
         test('Correct handler name', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // Handler name should be in kebab case with .handler extension
             let fn : Serverless.FunctionDefinitionHandler = {
                 name: 'thisIsAWellNamedExample',
@@ -201,6 +273,7 @@ describe('Test conventions plugin', () => {
 
     describe('Test function name checker', () => {
         test('Incorrect function name', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // Kebab case
             let fn : Serverless.FunctionDefinitionHandler = {
                 name: 'this-is-a-badly-named-example',
@@ -223,6 +296,7 @@ describe('Test conventions plugin', () => {
         });
 
         test('Correct function name', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // Function name should be in camel case
             let fn : Serverless.FunctionDefinitionHandler = {
                 name: 'thisIsAWellNamedExample',
@@ -237,6 +311,7 @@ describe('Test conventions plugin', () => {
 
     describe('Test handler name matches function check', () => {
         test('Incorrect handler and function name', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // With path and .handler
             let fn : Serverless.FunctionDefinitionHandler = {
                 name: 'thisIsABadlyNamedFunction',
@@ -269,6 +344,7 @@ describe('Test conventions plugin', () => {
         });
 
         test('Correct handler and function name', async () => {
+            let ServerlessConvention = createServerlessConvention();
             // With path and .handler
             let fn : Serverless.FunctionDefinitionHandler = {
                 name: 'thisIsAWellNamedExample',
@@ -305,7 +381,8 @@ describe('Test conventions plugin', () => {
 
     describe('Test DynamoDB table name checker', () => {
         test('Incorrect table name', async () => {
-            serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
+            let ServerlessConvention = createServerlessConvention();
+            ServerlessConvention.serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
             // DynamoDB table name should be in snake case
             let resource : CloudFormationResource = {
                 Type: 'AWS::DynamoDB::Table',
@@ -314,7 +391,7 @@ describe('Test conventions plugin', () => {
                 }
             }
 
-            let errors = ServerlessConvention.checkDynamoDBTableName(resource, serverless.service.getServiceName());
+            let errors = ServerlessConvention.checkDynamoDBTableName(resource, ServerlessConvention.serverless.service.getServiceName());
             expect(errors.pop()).toMatch('is not kebab case');
 
             // DynamoDB table name should be in snake case and start with the service name
@@ -325,7 +402,7 @@ describe('Test conventions plugin', () => {
                 }
             }
 
-            errors = ServerlessConvention.checkDynamoDBTableName(resource, serverless.service.getServiceName());
+            errors = ServerlessConvention.checkDynamoDBTableName(resource, ServerlessConvention.serverless.service.getServiceName());
             expect(errors.pop()).toMatch('is not kebab case');
             expect(errors.pop()).toMatch('does not start with the service name');
 
@@ -337,12 +414,13 @@ describe('Test conventions plugin', () => {
                 }
             }
 
-            errors = ServerlessConvention.checkDynamoDBTableName(resource, serverless.service.getServiceName());
+            errors = ServerlessConvention.checkDynamoDBTableName(resource, ServerlessConvention.serverless.service.getServiceName());
             expect(errors.pop()).toMatch('does not start with the service name');
         });
 
         test('Correct table name', async () => {
-            serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
+            let ServerlessConvention = createServerlessConvention();
+            ServerlessConvention.serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
 
             // DynamoDB table name should be in snake case
             const resource : CloudFormationResource = {
@@ -352,7 +430,7 @@ describe('Test conventions plugin', () => {
                 }
             }
 
-            let errors = ServerlessConvention.checkDynamoDBTableName(resource, serverless.service.getServiceName());
+            let errors = ServerlessConvention.checkDynamoDBTableName(resource, ServerlessConvention.serverless.service.getServiceName());
             expect(errors.length).toBe(0);
         });
     });
