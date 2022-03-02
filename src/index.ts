@@ -12,6 +12,7 @@ type ConventionsConfig = {
           functionName?: boolean,
           handlerNameMatchesFunction?: boolean,
           dynamoDBTableName?: boolean,
+          ssmParameters?: boolean
      }
 }
 
@@ -199,6 +200,17 @@ export default class ServerlessConventions {
           // Check that the function name is in snake case
           if (tableName !== kebabCase(tableName)) {
                errors.push(`Warning: DynamoDB table name "${tableName}" is not kebab case`);
+          }
+
+          return errors;
+     }
+
+     checkSSMParameter(param: string, serviceName: string): Array<string> {
+          let errors: Array<string> = [];
+
+          // Check the ssm parameter starts with the service name
+          if (!param.startsWith(serviceName)) {
+               errors.push(`Warning: SSM Parameter "${param}" does not start with the service name`)
           }
 
           return errors;

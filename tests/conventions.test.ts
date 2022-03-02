@@ -434,4 +434,28 @@ describe('Test conventions plugin', () => {
             expect(errors.length).toBe(0);
         });
     });
+
+    describe('Test SSM Parameter name checker', () => {
+        test('Incorrect parameter name', async () => {
+            let ServerlessConvention = createServerlessConvention();
+            ServerlessConvention.serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
+
+            // SSM Parameter should start with the service name
+            let parameter = 'not-valid-parameter'
+
+            let errors = ServerlessConvention.checkSSMParameter(parameter, ServerlessConvention.serverless.service.getServiceName());
+            expect(errors.pop()).toMatch('does not start with the service name');
+        });
+
+        test('Correct parameter name', async () => {
+            let ServerlessConvention = createServerlessConvention();
+            ServerlessConvention.serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
+
+            // SSM Parameter should start with the service name
+            let parameter = 'test-name-parameter'
+
+            let errors = ServerlessConvention.checkSSMParameter(parameter, ServerlessConvention.serverless.service.getServiceName());
+            expect(errors.length).toBe(0);
+        });
+    });
 });
