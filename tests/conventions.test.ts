@@ -294,9 +294,26 @@ describe('Test conventions plugin', () => {
             errors = ServerlessConvention.checkFunctionName(fn);
             expect(errors.pop()).toMatch('is not camel case');
 
-            // Check the name hasn't been overwritten with the name parameter
+            // Changing default name 
+            fn = {
+                name: 'thisIsAWellNamedExample',
+                handler: "this-is-a-badly-named-example.handler",
+                events: []
+            };
 
+            errors = ServerlessConvention.checkFunctionName(fn);
+            expect(errors.pop()).toMatch('is not using the default name');
 
+            // Changing default name and kebab case
+            fn = {
+                name: [ServerlessConvention.serverless.service.provider.stage, 'this-is-a-badly-named-example'].join("-"),
+                handler: "this-is-a-badly-named-example.handler",
+                events: []
+            };
+
+            errors = ServerlessConvention.checkFunctionName(fn);
+            expect(errors.pop()).toMatch('is not using the default name');
+            expect(errors.pop()).toMatch('is not camel case');
         });
 
         test('Correct function name', async () => {
