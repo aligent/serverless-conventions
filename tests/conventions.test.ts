@@ -44,7 +44,7 @@ function createExampleServerless(): Serverless {
 
     // A good function and handler name
     let fn : Serverless.FunctionDefinitionHandler = {
-        name: 'thisIsAWellNamedFunction',
+        name: [serverless.service.getServiceName(), serverless.service.provider.stage, 'thisIsAWellNamedFunction'].join("-"),
         handler: "src/this-is-a-well-named-function.handler",
         events: []
     };
@@ -165,7 +165,7 @@ describe('Test conventions plugin', () => {
 
             // Handler does not match function name (this should be ignored so test should still pass)
             let fn : Serverless.FunctionDefinitionHandler = {
-                name: 'thisIsAWellNamedFunction',
+                name: [ServerlessConvention.serverless.service.getServiceName(), ServerlessConvention.serverless.service.provider.stage, 'thisIsAWellNamedFunction'].join("-"),
                 handler: "src/this-is-a-badly-named-function.handler",
                 events: []
             };
@@ -276,7 +276,7 @@ describe('Test conventions plugin', () => {
             let ServerlessConvention = createServerlessConvention();
             // Kebab case
             let fn : Serverless.FunctionDefinitionHandler = {
-                name: 'this-is-a-badly-named-example',
+                name: [ServerlessConvention.serverless.service.getServiceName(), ServerlessConvention.serverless.service.provider.stage, 'this-is-a-badly-named-example'].join("-"),
                 handler: "src/this-is-a-badly-named-example.handler",
                 events: []
             };
@@ -286,20 +286,24 @@ describe('Test conventions plugin', () => {
 
             // Capitalising first letter
             fn = {
-                name: 'ThisIsABadlyNamedFunction',
+                name: [ServerlessConvention.serverless.service.getServiceName(), ServerlessConvention.serverless.service.provider.stage, 'ThisIsABadlyNamedFunction'].join("-"),
                 handler: "this-is-a-badly-named-example.handler",
                 events: []
             };
 
             errors = ServerlessConvention.checkFunctionName(fn);
             expect(errors.pop()).toMatch('is not camel case');
+
+            // Check the name hasn't been overwritten with the name parameter
+
+
         });
 
         test('Correct function name', async () => {
             let ServerlessConvention = createServerlessConvention();
             // Function name should be in camel case
             let fn : Serverless.FunctionDefinitionHandler = {
-                name: 'thisIsAWellNamedExample',
+                name: [ServerlessConvention.serverless.service.getServiceName(), ServerlessConvention.serverless.service.provider.stage, 'thisIsAWellNamedExample'].join("-"),
                 handler: "src/this-is-a-well-named-example.handler",
                 events: []
             };
