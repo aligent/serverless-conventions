@@ -150,14 +150,21 @@ export default class ServerlessConventions {
 
      // Function name conventions
      // Must be camelCase
+     // Must use the default function name
      checkFunctionName(fn: Serverless.FunctionDefinitionHandler): Array<string> {
           let errors: Array<string> = [];
           // Get the function name and strip the service name and stage from it
           const fnName = fn.name?.split(this.serverless.service.provider.stage + "-").pop() as string;
 
           // Check that the function name is in camel case
-          if (fnName !== camelCase(fnName)) {
+          if (fnName !== undefined && fnName !== camelCase(fnName)) {
                errors.push(`Warning: Function "${fnName}" is not camel case`);
+          }
+
+          // Check the name hasn't been overwritten with a custom name parameter
+          let expectedFnName = [this.serverless.service.getServiceName(), this.serverless.service.provider.stage, fnName].join("-");
+          if (fn.name !== expectedFnName) {
+               errors.push(`Warning: Function "${fnName}" is not using the default name. Remove the custom name property from the function.`);
           }
 
           return errors;
