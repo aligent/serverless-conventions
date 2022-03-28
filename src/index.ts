@@ -84,6 +84,12 @@ export default class ServerlessConventions {
                }
           }
 
+          // If there is an esbuild config check that the node versions match
+          let esbuildConfig = this.serverless.service.custom.esbuild;
+          if (esbuildConfig) {
+               errors = errors.concat(this.checkNodeVersion(this.serverless.service.provider.runtime, esbuildConfig.target));
+          }
+
           // If there were errors detected, print out a list and throw an error
           if (errors.length !== 0) {
                errors.forEach(error => {
@@ -199,6 +205,25 @@ export default class ServerlessConventions {
           // Check that the function name is in snake case
           if (tableName !== kebabCase(tableName)) {
                errors.push(`Warning: DynamoDB table name "${tableName}" is not kebab case`);
+          }
+
+          return errors;
+     }
+
+     // Check the node version in esbuild config matches the one set as the provider runtime
+     checkNodeVersion(providerVersion: string, esBuildVersion: string): Array<string> {
+          let errors: Array<string> = [];
+
+          // providerVersion : nodejs14.x
+          // esBuildVersion  : node14
+          // Compare these two versions and make sure the numbers match
+          const versionNumberRegex = /\d+/i
+
+          const providerVersionNum =  providerVersion.match(versionNumberRegex).pop();
+          const esBuildVersionNum = providerVersion.match(versionNumberRegex).pop();
+
+          if (providerVersionNum !== esBuildVersionNum) {
+               errors.push(`Warning: Provider node runtime version "${providerVersion}" does not match esbuild node version "${esBuildVersion}"`);
           }
 
           return errors;
