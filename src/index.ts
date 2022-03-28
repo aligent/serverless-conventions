@@ -86,7 +86,7 @@ export default class ServerlessConventions {
 
           // If there is an esbuild config check that the node versions match
           let esbuildConfig = this.serverless.service.custom.esbuild;
-          if (esbuildConfig) {
+          if (esbuildConfig && esbuildConfig.target) {
                errors = errors.concat(this.checkNodeVersion(this.serverless.service.provider.runtime, esbuildConfig.target));
           }
 
@@ -220,7 +220,7 @@ export default class ServerlessConventions {
           const versionNumberRegex = /\d+/i
 
           const providerVersionNum =  providerVersion.match(versionNumberRegex).pop();
-          const esBuildVersionNum = providerVersion.match(versionNumberRegex).pop();
+          const esBuildVersionNum = esBuildVersion.match(versionNumberRegex).pop();
 
           if (providerVersionNum !== esBuildVersionNum) {
                errors.push(`Warning: Provider node runtime version "${providerVersion}" does not match esbuild node version "${esBuildVersion}"`);
