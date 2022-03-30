@@ -29,7 +29,11 @@ function createExampleServerless(): Serverless {
         stage: 'test',
         region: 'ap-southeast-2',
         versionFunctions: false,
+        runtime: 'nodejs14.x'
     } as any
+    serverless.service.custom.esbuild = {
+        target: 'node14'
+    }
 
     // Create some example resources
     const resource : CloudFormationResource = {
@@ -431,6 +435,22 @@ describe('Test conventions plugin', () => {
             }
 
             let errors = ServerlessConvention.checkDynamoDBTableName(resource, ServerlessConvention.serverless.service.getServiceName());
+            expect(errors.length).toBe(0);
+        });
+    });
+    
+    describe('Test node version', () => {
+        test('Different node versions', async () => {
+            let ServerlessConvention = createServerlessConvention();
+
+            let errors = ServerlessConvention.checkNodeVersion("nodejs14.x", "node12");
+            expect(errors.pop()).toMatch('does not match esbuild node version');
+        });
+
+        test('Same node version', async () => {
+            let ServerlessConvention = createServerlessConvention();
+
+            let errors = ServerlessConvention.checkNodeVersion("nodejs14.x", "node14");
             expect(errors.length).toBe(0);
         });
     });
