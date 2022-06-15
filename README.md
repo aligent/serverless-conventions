@@ -13,6 +13,7 @@ A [Serverless framework](https://www.serverless.com) plugin to enforce various f
 | Service name must be less than 24 characters | this-is-a-good-name | this-is-a-bad-name-because-its-too-long |
 | Handler names must have the same name as the function | functions:<br>&nbsp;thisIsAWellNamedExample:<br>&nbsp;&nbsp;handler: src/this-is-a-well-named-example.handler | functions:<br>&nbsp;thisIsABadlyNamedFunction:<br>&nbsp;&nbsp;handler: src/this-is-a-badly-named-example.handler |
 | Function names must be in camel case | thisIsAWellNamedExample | ThisIsABadlyNamedExample |
+| Function names should not be overwritten | functions:<br>&nbsp;exampleFunction:<br>&nbsp;&nbsp;handler: src/example-function.handler | functions:<br>&nbsp;exampleFunction:<br>&nbsp;&nbsp;name: exampleFunction<br>&nbsp;&nbsp;handler: src/example-function.handler
 | Handler names must be dash delimited | src/this-is-a-well-named-example.handler | src/ThisIsABadlyNamedExample.handler |
 | Handler names must end in ".handler" | src/this-is-a-well-named-example.handler | src/this-is-a-badly-named-example |
 | DynamoDB table names must be in kebab case | example-name-good-table-name | BadTableName |
