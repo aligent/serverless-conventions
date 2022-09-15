@@ -6,7 +6,7 @@ import Aws from 'serverless/plugins/aws/provider/awsProvider';
 import Service from 'serverless/classes/Service';
 
 type ConventionsConfig = {
-  ignore?: {
+  ignore: {
     serviceName?: boolean;
     handlerName?: boolean;
     functionName?: boolean;
@@ -52,10 +52,9 @@ export default class ServerlessConventions {
 
     // Make sure ignore is defined to prevent errors being from being thrown when referencing children
     if (this.conventionsConfig === undefined) {
-      this.conventionsConfig = {};
-    }
-    if (this.conventionsConfig.ignore === undefined) {
-      this.conventionsConfig.ignore = {};
+      this.conventionsConfig = {
+        ignore: {},
+      };
     }
   }
 
