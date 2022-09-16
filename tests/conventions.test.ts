@@ -275,14 +275,18 @@ describe('Test conventions plugin', () => {
       let errors = ServerlessConvention.checkStageName(
         ServerlessConvention.serverless.service
       );
-      expect(errors.pop()).toMatch('only alphabet characters in lower case');
+      expect(errors.pop()).toMatch(
+        'only contain alphabet characters in lower case'
+      );
 
       // Contains non-alphabet character
       ServerlessConvention.serverless.service.provider.stage = '5tg';
       errors = ServerlessConvention.checkStageName(
         ServerlessConvention.serverless.service
       );
-      expect(errors.pop()).toMatch('only alphabet characters in lower case');
+      expect(errors.pop()).toMatch(
+        'only contain alphabet characters in lower case'
+      );
 
       // Longer than 3 characters
       ServerlessConvention.serverless.service.provider.stage = 'test';
@@ -304,7 +308,9 @@ describe('Test conventions plugin', () => {
         ServerlessConvention.serverless.service
       );
       expect(errors.pop()).toMatch('must be 3 characters long');
-      expect(errors.pop()).toMatch('only alphabet characters in lower case');
+      expect(errors.pop()).toMatch(
+        'only contain alphabet characters in lower case'
+      );
     });
 
     test('Correct stage name', async () => {
