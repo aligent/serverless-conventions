@@ -176,7 +176,11 @@ describe('Test conventions plugin', () => {
       let ServerlessConvention = createServerlessConvention();
 
       // Ignore stage name check
-      ServerlessConvention.conventionsConfig.ignore.stageName = true;
+      ServerlessConvention.conventionsConfig = {
+        ignore: {
+          stageName: true,
+        },
+      };
 
       ServerlessConvention.serverless.service.provider.stage =
         'NotAGoodStageName';
@@ -188,9 +192,13 @@ describe('Test conventions plugin', () => {
 
     test('Initialize function ignore handler name check', async () => {
       let ServerlessConvention = createServerlessConvention();
+
       // Ignore the service name check
-      ServerlessConvention.conventionsConfig.ignore.handlerNameMatchesFunction =
-        true;
+      ServerlessConvention.conventionsConfig = {
+        ignore: {
+          handlerNameMatchesFunction: true,
+        },
+      };
 
       // Handler does not match function name (this should be ignored so test should still pass)
       let fn: Serverless.FunctionDefinitionHandler = {
