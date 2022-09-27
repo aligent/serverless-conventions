@@ -11,6 +11,8 @@ A [Serverless framework](https://www.serverless.com) plugin to enforce various f
 | Service name must be dash delimited | this-is-a-good-name | thisIsABadName |
 | Service name must not contain the word "service" | this-is-a-good-name | this-is-a-bad-service | 
 | Service name must be less than 24 characters | this-is-a-good-name | this-is-a-bad-name-because-its-too-long |
+| Stage must contains only lower case alphabet characters | dev | Development |
+| Stage must be exactly 3 characters long | prd | prod |
 | Handler names must have the same name as the function | functions:<br>&nbsp;thisIsAWellNamedExample:<br>&nbsp;&nbsp;handler: src/this-is-a-well-named-example.handler | functions:<br>&nbsp;thisIsABadlyNamedFunction:<br>&nbsp;&nbsp;handler: src/this-is-a-badly-named-example.handler |
 | Function names must be in camel case | thisIsAWellNamedExample | ThisIsABadlyNamedExample |
 | Handler names must be dash delimited | src/this-is-a-well-named-example.handler | src/ThisIsABadlyNamedExample.handler |
@@ -35,6 +37,7 @@ A list of all the available ignore commands are below:
 conventions:
   ignore:
     serviceName: true
+    stageName: true
     handlerName: true
     functionName: true
     handlerNameMatchesFunction: true
