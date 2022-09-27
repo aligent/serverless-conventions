@@ -166,7 +166,7 @@ export default class ServerlessConventions {
   }
 
   // Stage name validation
-  // Must contains only lower case alphabet characters
+  // Must contain only lower case alphabet characters
   // Must be only 3 characters
   checkStageName(service: Service): Array<string> {
     let errors: Array<string> = [];
@@ -175,7 +175,7 @@ export default class ServerlessConventions {
     // Check that the stage name contains only lower case alphabet characters (a-z)
     if (stageName.match(/[^a-z]/)) {
       errors.push(
-        `Warning: Stage name "${stageName}" should contains only alphabet characters in lower case`
+        `Warning: Stage name "${stageName}" should only contain alphabet characters in lower case`
       );
     }
 
