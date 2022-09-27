@@ -8,6 +8,7 @@ import Service from 'serverless/classes/Service';
 type ConventionsConfig = {
   ignore?: {
     serviceName?: boolean;
+    stageName?: boolean;
     handlerName?: boolean;
     functionName?: boolean;
     handlerNameMatchesFunction?: boolean;
@@ -66,6 +67,10 @@ export default class ServerlessConventions {
     errors = this.conventionsConfig.ignore.serviceName
       ? errors
       : errors.concat(this.checkServiceName(this.serverless.service));
+
+    errors = this.conventionsConfig.ignore.stageName
+      ? errors
+      : errors.concat(this.checkStageName(this.serverless.service));
 
     const functionNames = this.serverless.service.getAllFunctions();
     functionNames.forEach((fnName) => {
@@ -146,13 +151,39 @@ export default class ServerlessConventions {
     // Check that the service name does not contain the word "service"
     if (serviceName.toLowerCase().includes('service')) {
       errors.push(
-        `Warning: Service name should not include the word "service"`
+        `Warning: Service name "${serviceName}" should not include the word "service"`
       );
     }
 
     // Check the length of the service name is not greater than x
     if (serviceName.length > 23) {
-      errors.push(`Warning: Service name must be less than 23 characters`);
+      errors.push(
+        `Warning: Service name "${serviceName}" must be less than 23 characters`
+      );
+    }
+
+    return errors;
+  }
+
+  // Stage name validation
+  // Must contains only lower case alphabet characters
+  // Must be only 3 characters
+  checkStageName(service: Service): Array<string> {
+    let errors: Array<string> = [];
+    const stageName = service.provider.stage;
+
+    // Check that the stage name contains only lower case alphabet characters (a-z)
+    if (stageName.match(/[^a-z]/)) {
+      errors.push(
+        `Warning: Stage name "${stageName}" should contains only alphabet characters in lower case`
+      );
+    }
+
+    // Check the length of the stage name is 3 characters
+    if (stageName.length !== 3) {
+      errors.push(
+        `Warning: Stage name "${stageName}" must be 3 characters long`
+      );
     }
 
     return errors;
