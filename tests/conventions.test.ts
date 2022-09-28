@@ -4,7 +4,7 @@ import { CloudFormationResource } from 'serverless/plugins/aws/provider/awsProvi
 
 function createExampleServerless(): Serverless {
   const options: Serverless.Options = {
-    stage: 'test',
+    stage: 'tst',
     region: 'ap-southeast-2',
   };
 
@@ -16,7 +16,7 @@ function createExampleServerless(): Serverless {
   let serverless: Serverless = new Serverless({ options });
 
   serverless.cli = cli;
-  serverless.service.provider.stage = 'test';
+  serverless.service.provider.stage = 'tst';
   serverless.service.initialServerlessConfig = {};
   // Return a service name
   serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
@@ -26,7 +26,7 @@ function createExampleServerless(): Serverless {
       Resources: {},
     },
     name: 'aws',
-    stage: 'test',
+    stage: 'tst',
     region: 'ap-southeast-2',
     versionFunctions: false,
     runtime: 'nodejs14.x',
@@ -65,7 +65,7 @@ function createServerlessConvention(): ServerlessConventions {
   // Create a valid serverless instance
   const serverless: Serverless = createExampleServerless();
   const options: Serverless.Options = {
-    stage: 'test',
+    stage: 'tst',
     region: 'ap-southeast-2',
   };
 
@@ -133,7 +133,7 @@ describe('Test conventions plugin', () => {
       // Create another serverless instance with bad data
       const BadServerlessConvention: ServerlessConventions =
         new ServerlessConventions(serverless, {
-          stage: 'test',
+          stage: 'BadStageName',
           region: 'ap-southeast-2',
         });
 
@@ -148,6 +148,7 @@ describe('Test conventions plugin', () => {
       ServerlessConvention.conventionsConfig = {
         ignore: {
           serviceName: true,
+          stageName: true,
           handlerName: true,
           functionName: true,
           handlerNameMatchesFunction: true,
@@ -171,7 +172,21 @@ describe('Test conventions plugin', () => {
       }).not.toThrowError();
     });
 
-    test('Initialize function ignore service name check', async () => {
+    test('Initialize function ignore stage name check', async () => {
+      let ServerlessConvention = createServerlessConvention();
+
+      // Ignore stage name check
+      ServerlessConvention.conventionsConfig.ignore.stageName = true;
+
+      ServerlessConvention.serverless.service.provider.stage =
+        'NotAGoodStageName';
+
+      expect(() => {
+        ServerlessConvention.initialize();
+      }).not.toThrowError();
+    });
+
+    test('Initialize function ignore handler name check', async () => {
       let ServerlessConvention = createServerlessConvention();
       // Ignore the service name check
       ServerlessConvention.conventionsConfig.ignore.handlerNameMatchesFunction =
@@ -228,14 +243,14 @@ describe('Test conventions plugin', () => {
       expect(errors.pop()).toMatch('not include the word "service"');
       expect(errors.pop()).toMatch('is not kebab case');
 
-      // Both not kebab case and word "service" in the name
+      // Longer than 23 characters
       ServerlessConvention.serverless.service.getServiceName = function () {
         return 'thisnameisverylongitshouldnotbethislongorelseitwontbeavalidname';
       };
       errors = ServerlessConvention.checkServiceName(
         ServerlessConvention.serverless.service
       );
-      expect(errors.pop()).toMatch('name must be less than');
+      expect(errors.pop()).toMatch('must be less than 23 characters');
     });
 
     test('Correct service name', async () => {
@@ -247,6 +262,65 @@ describe('Test conventions plugin', () => {
       let errors = ServerlessConvention.checkServiceName(
         ServerlessConvention.serverless.service
       );
+      expect(errors.length).toBe(0);
+    });
+  });
+
+  describe('Test stage name checker', () => {
+    test('Incorrect stage name', async () => {
+      let ServerlessConvention = createServerlessConvention();
+
+      // Not in lower case
+      ServerlessConvention.serverless.service.provider.stage = 'Dev';
+      let errors = ServerlessConvention.checkStageName(
+        ServerlessConvention.serverless.service
+      );
+      expect(errors.pop()).toMatch(
+        'only contain alphabet characters in lower case'
+      );
+
+      // Contains non-alphabet character
+      ServerlessConvention.serverless.service.provider.stage = '5tg';
+      errors = ServerlessConvention.checkStageName(
+        ServerlessConvention.serverless.service
+      );
+      expect(errors.pop()).toMatch(
+        'only contain alphabet characters in lower case'
+      );
+
+      // Longer than 3 characters
+      ServerlessConvention.serverless.service.provider.stage = 'test';
+      errors = ServerlessConvention.checkStageName(
+        ServerlessConvention.serverless.service
+      );
+      expect(errors.pop()).toMatch('must be 3 characters long');
+
+      // Shorter than 3 characters
+      ServerlessConvention.serverless.service.provider.stage = 't';
+      errors = ServerlessConvention.checkStageName(
+        ServerlessConvention.serverless.service
+      );
+      expect(errors.pop()).toMatch('must be 3 characters long');
+
+      // Both not lower case alphabets only and not 3 characters in length
+      ServerlessConvention.serverless.service.provider.stage = 'testService';
+      errors = ServerlessConvention.checkStageName(
+        ServerlessConvention.serverless.service
+      );
+      expect(errors.pop()).toMatch('must be 3 characters long');
+      expect(errors.pop()).toMatch(
+        'only contain alphabet characters in lower case'
+      );
+    });
+
+    test('Correct stage name', async () => {
+      let ServerlessConvention = createServerlessConvention();
+
+      ServerlessConvention.serverless.service.provider.stage = 'prd';
+      let errors = ServerlessConvention.checkStageName(
+        ServerlessConvention.serverless.service
+      );
+
       expect(errors.length).toBe(0);
     });
   });
