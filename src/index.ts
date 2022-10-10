@@ -6,7 +6,7 @@ import Aws from 'serverless/plugins/aws/provider/awsProvider';
 import Service from 'serverless/classes/Service';
 
 type ConventionsConfig = {
-  ignore?: {
+  ignore: {
     serviceName?: boolean;
     stageName?: boolean;
     handlerName?: boolean;
@@ -48,16 +48,14 @@ export default class ServerlessConventions {
       },
     });
 
-    this.conventionsConfig =
-      this.serverless.service.initialServerlessConfig.conventions;
+    // Make sure `conventionsConfig` is defined in case `serverless.yml` only has empty `conventions` block
+    this.conventionsConfig = this.serverless.service.initialServerlessConfig
+      .conventions || {
+      ignore: {},
+    };
 
-    // Make sure ignore is defined to prevent errors being from being thrown when referencing children
-    if (this.conventionsConfig === undefined) {
-      this.conventionsConfig = {};
-    }
-    if (this.conventionsConfig.ignore === undefined) {
-      this.conventionsConfig.ignore = {};
-    }
+    // Make sure `ignore` is defined in case `serverless.yml` has `conventions` with an empty `ignore` block
+    this.conventionsConfig.ignore = this.conventionsConfig.ignore || {};
   }
 
   initialize() {
