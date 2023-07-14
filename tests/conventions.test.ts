@@ -2,9 +2,19 @@ import ServerlessConventions from '../src/index';
 import Serverless from 'serverless';
 import { CloudFormationResource } from 'serverless/plugins/aws/provider/awsProvider';
 
-function createExampleServerless(): Serverless {
+function formatServiceName(
+  name: string,
+  instance: Serverless | ServerlessConventions
+): string {
+  const service =
+    'serverless' in instance ? instance.serverless.service : instance.service;
+
+  return [service.getServiceName(), service.provider.stage, name].join('-');
+}
+
+function createExampleServerless(stage = 'tst'): Serverless {
   const options: Serverless.Options = {
-    stage: 'tst',
+    stage,
     region: 'ap-southeast-2',
   };
 
@@ -16,7 +26,7 @@ function createExampleServerless(): Serverless {
   let serverless: Serverless = new Serverless({ options });
 
   serverless.cli = cli;
-  serverless.service.provider.stage = 'tst';
+  serverless.service.provider.stage = stage;
   serverless.service.initialServerlessConfig = {};
   // Return a service name
   serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
@@ -48,24 +58,26 @@ function createExampleServerless(): Serverless {
 
   // A good function and handler name
   let fn: Serverless.FunctionDefinitionHandler = {
-    name: 'thisIsAWellNamedFunction',
+    name: formatServiceName('thisIsAWellNamedFunction', serverless),
     handler: 'src/this-is-a-well-named-function.handler',
     events: [],
   };
 
   serverless.service.getAllFunctions = jest
     .fn()
-    .mockReturnValue(['thisIsAWellNamedFunction']);
+    .mockReturnValue([
+      formatServiceName('thisIsAWellNamedFunction', serverless),
+    ]);
   serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
   return serverless;
 }
 
-function createServerlessConvention(): ServerlessConventions {
+function createServerlessConvention(stage = 'tst'): ServerlessConventions {
   // Create a valid serverless instance
-  const serverless: Serverless = createExampleServerless();
+  const serverless: Serverless = createExampleServerless(stage);
   const options: Serverless.Options = {
-    stage: 'tst',
+    stage,
     region: 'ap-southeast-2',
   };
 
@@ -127,7 +139,9 @@ describe('Test conventions plugin', () => {
 
       serverless.service.getAllFunctions = jest
         .fn()
-        .mockReturnValue(['ThisIsABadlyNamedFunction']);
+        .mockReturnValue([
+          formatServiceName('ThisIsABadlyNamedFunction', serverless),
+        ]);
       serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
       // Create another serverless instance with bad data
@@ -173,13 +187,11 @@ describe('Test conventions plugin', () => {
     });
 
     test('Initialize function ignore stage name check', async () => {
-      let ServerlessConvention = createServerlessConvention();
+      let ServerlessConvention =
+        createServerlessConvention('NotAGoodStageName');
 
       // Ignore stage name check
       ServerlessConvention.conventionsConfig.ignore.stageName = true;
-
-      ServerlessConvention.serverless.service.provider.stage =
-        'NotAGoodStageName';
 
       expect(() => {
         ServerlessConvention.initialize();
@@ -194,14 +206,19 @@ describe('Test conventions plugin', () => {
 
       // Handler does not match function name (this should be ignored so test should still pass)
       let fn: Serverless.FunctionDefinitionHandler = {
-        name: 'thisIsAWellNamedFunction',
+        name: formatServiceName(
+          'thisIsAWellNamedFunction',
+          ServerlessConvention
+        ),
         handler: 'src/this-is-a-badly-named-function.handler',
         events: [],
       };
 
       ServerlessConvention.serverless.service.getAllFunctions = jest
         .fn()
-        .mockReturnValue(['thisIsAWellNamedFunction']);
+        .mockReturnValue([
+          formatServiceName('thisIsAWellNamedFunction', ServerlessConvention),
+        ]);
       ServerlessConvention.serverless.service.getFunction = jest
         .fn()
         .mockReturnValue(fn);
@@ -330,7 +347,10 @@ describe('Test conventions plugin', () => {
       let ServerlessConvention = createServerlessConvention();
       // Not kebab case
       let fn: Serverless.FunctionDefinitionHandler = {
-        name: 'thisIsABadlyNamedExample',
+        name: formatServiceName(
+          'thisIsABadlyNamedExample',
+          ServerlessConvention
+        ),
         handler: 'src/This-is-a-badly-named-example.handler',
         events: [],
       };
@@ -388,7 +408,10 @@ describe('Test conventions plugin', () => {
       let ServerlessConvention = createServerlessConvention();
       // Kebab case
       let fn: Serverless.FunctionDefinitionHandler = {
-        name: 'this-is-a-badly-named-example',
+        name: formatServiceName(
+          'this-is-a-badly-named-example',
+          ServerlessConvention
+        ),
         handler: 'src/this-is-a-badly-named-example.handler',
         events: [],
       };
@@ -398,7 +421,10 @@ describe('Test conventions plugin', () => {
 
       // Capitalising first letter
       fn = {
-        name: 'ThisIsABadlyNamedFunction',
+        name: formatServiceName(
+          'ThisIsABadlyNamedFunction',
+          ServerlessConvention
+        ),
         handler: 'this-is-a-badly-named-example.handler',
         events: [],
       };
@@ -411,7 +437,10 @@ describe('Test conventions plugin', () => {
       let ServerlessConvention = createServerlessConvention();
       // Function name should be in camel case
       let fn: Serverless.FunctionDefinitionHandler = {
-        name: 'thisIsAWellNamedExample',
+        name: formatServiceName(
+          'thisIsAWellNamedExample',
+          ServerlessConvention
+        ),
         handler: 'src/this-is-a-well-named-example.handler',
         events: [],
       };
@@ -426,7 +455,10 @@ describe('Test conventions plugin', () => {
       let ServerlessConvention = createServerlessConvention();
       // With path and .handler
       let fn: Serverless.FunctionDefinitionHandler = {
-        name: 'thisIsABadlyNamedFunction',
+        name: formatServiceName(
+          'thisIsABadlyNamedFunction',
+          ServerlessConvention
+        ),
         handler: 'src/this-is-a-badly-named-example.handler',
         events: [],
       };
@@ -436,7 +468,10 @@ describe('Test conventions plugin', () => {
 
       // Without path but with handler
       fn = {
-        name: 'thisIsABadlyNamedFunction',
+        name: formatServiceName(
+          'thisIsABadlyNamedFunction',
+          ServerlessConvention
+        ),
         handler: 'this-is-a-badly-named-example.handler',
         events: [],
       };
@@ -446,7 +481,10 @@ describe('Test conventions plugin', () => {
 
       // Without path and handler
       fn = {
-        name: 'thisIsABadlyNamedFunction',
+        name: formatServiceName(
+          'thisIsABadlyNamedFunction',
+          ServerlessConvention
+        ),
         handler: 'this-is-a-badly-named-example',
         events: [],
       };
@@ -459,7 +497,10 @@ describe('Test conventions plugin', () => {
       let ServerlessConvention = createServerlessConvention();
       // With path and .handler
       let fn: Serverless.FunctionDefinitionHandler = {
-        name: 'thisIsAWellNamedExample',
+        name: formatServiceName(
+          'thisIsAWellNamedExample',
+          ServerlessConvention
+        ),
         handler: 'src/this-is-a-well-named-example.handler',
         events: [],
       };
@@ -469,7 +510,10 @@ describe('Test conventions plugin', () => {
 
       // Without path but with handler
       fn = {
-        name: 'thisIsAWellNamedExample',
+        name: formatServiceName(
+          'thisIsAWellNamedExample',
+          ServerlessConvention
+        ),
         handler: 'this-is-a-well-named-example.handler',
         events: [],
       };
@@ -481,7 +525,10 @@ describe('Test conventions plugin', () => {
       // Note that although a handler extension is required to be valid
       // this function does not check that and therefore should return no errors
       fn = {
-        name: 'thisIsAWellNamedExample',
+        name: formatServiceName(
+          'thisIsAWellNamedExample',
+          ServerlessConvention
+        ),
         handler: 'this-is-a-well-named-example',
         events: [],
       };
