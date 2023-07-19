@@ -23,7 +23,7 @@ function createExampleServerless(stage = 'tst'): Serverless {
     log: jest.fn(),
   };
 
-  let serverless: Serverless = new Serverless({ options });
+  let serverless: Serverless = new Serverless({ options, commands: [] });
 
   serverless.cli = cli;
   serverless.service.provider.stage = stage;
