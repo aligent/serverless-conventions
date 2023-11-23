@@ -53,6 +53,15 @@ export default class ServerlessConventions implements ServerlessPlugin {
 
     // Make sure `ignore` is defined in case `serverless.yml` has `conventions` with an empty `ignore` block
     this.conventionsConfig.ignore = this.conventionsConfig.ignore || {};
+
+    // Notify user if they are using unsupported Serverless version
+    const version = parseFloat(this.serverless.getVersion());
+    if (version < 3) {
+      this.log.warning(
+        `You are using an old Serverless version (${version}).\n` +
+          `Please consider to upgrade Serverless or downgrade this plugin to v0.4.1`
+      );
+    }
   }
 
   runConventionCheck() {
