@@ -1,6 +1,8 @@
-import ServerlessConventions from '../src/index';
 import Serverless from 'serverless';
+import type ServerlessPlugin from 'serverless/classes/Plugin';
 import { CloudFormationResource } from 'serverless/plugins/aws/provider/awsProvider';
+import ServerlessConventions from '../src/index';
+import { ServerlessClasses } from '../src/type';
 
 function formatServiceName(
   name: string,
@@ -12,7 +14,7 @@ function formatServiceName(
   return [service.getServiceName(), service.provider.stage, name].join('-');
 }
 
-function createExampleServerless(stage = 'tst'): Serverless {
+function createExampleServerless(stage = 'tst'): ServerlessClasses {
   const options: Serverless.Options = {
     stage,
     region: 'ap-southeast-2',
@@ -23,7 +25,7 @@ function createExampleServerless(stage = 'tst'): Serverless {
     log: jest.fn(),
   };
 
-  let serverless: Serverless = new Serverless({ options, commands: [] });
+  let serverless: ServerlessClasses = new Serverless({ options, commands: [] });
 
   serverless.cli = cli;
   serverless.service.provider.stage = stage;
@@ -73,19 +75,34 @@ function createExampleServerless(stage = 'tst'): Serverless {
   return serverless;
 }
 
-function createServerlessConvention(stage = 'tst'): ServerlessConventions {
+function createServerlessConvention(
+  stage = 'tst',
+  serverlessIn?: ServerlessClasses
+): ServerlessConventions {
   // Create a valid serverless instance
-  const serverless: Serverless = createExampleServerless(stage);
+  const serverless = serverlessIn || createExampleServerless(stage);
   const options: Serverless.Options = {
     stage,
     region: 'ap-southeast-2',
+  };
+  const log: ServerlessPlugin.Logging['log'] = {
+    error: () => {},
+    warning: () => {},
+    notice: () => {},
+    info: () => {},
+    debug: () => {},
+    verbose: () => {},
+    success: () => {},
   };
 
   // Create a serverless conventions instance
   const ServerlessConvention: ServerlessConventions = new ServerlessConventions(
     serverless,
-    options
+    options,
+    { log }
   );
+
+  ServerlessConvention.initialize();
 
   return ServerlessConvention;
 }
@@ -96,7 +113,7 @@ describe('Test conventions plugin', () => {
       let ServerlessConvention = createServerlessConvention();
       // Run the initialize function
       expect(() => {
-        ServerlessConvention.initialize();
+        ServerlessConvention.runConventionCheck();
       }).not.toThrowError();
     });
 
@@ -107,7 +124,7 @@ describe('Test conventions plugin', () => {
 
       // Run the initialize function
       expect(() => {
-        ServerlessConvention.initialize();
+        ServerlessConvention.runConventionCheck();
       }).not.toThrowError();
     });
 
@@ -145,15 +162,17 @@ describe('Test conventions plugin', () => {
       serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
       // Create another serverless instance with bad data
-      const BadServerlessConvention: ServerlessConventions =
-        new ServerlessConventions(serverless, {
-          stage: 'BadStageName',
-          region: 'ap-southeast-2',
-        });
-
+      // const BadServerlessConvention = new ServerlessConventions(serverless, {
+      //   stage: 'BadStageName',
+      //   region: 'ap-southeast-2',
+      // });
+      const BadServerlessConvention = createServerlessConvention(
+        'BadStageName',
+        serverless
+      );
       // Run the initialize function
       expect(() => {
-        BadServerlessConvention.initialize();
+        BadServerlessConvention.runConventionCheck();
       }).toThrowError();
     });
 
@@ -171,7 +190,7 @@ describe('Test conventions plugin', () => {
       };
 
       expect(() => {
-        ServerlessConvention.initialize();
+        ServerlessConvention.runConventionCheck();
       }).not.toThrowError();
     });
 
@@ -182,7 +201,7 @@ describe('Test conventions plugin', () => {
       };
 
       expect(() => {
-        ServerlessConvention.initialize();
+        ServerlessConvention.runConventionCheck();
       }).not.toThrowError();
     });
 
@@ -194,7 +213,7 @@ describe('Test conventions plugin', () => {
       ServerlessConvention.conventionsConfig.ignore.stageName = true;
 
       expect(() => {
-        ServerlessConvention.initialize();
+        ServerlessConvention.runConventionCheck();
       }).not.toThrowError();
     });
 

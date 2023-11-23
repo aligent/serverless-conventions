@@ -11,7 +11,7 @@ export interface ServerlessErrorConstructor {
 }
 
 export interface ServerlessClasses extends Serverless {
-  classes: { Error: ServerlessErrorConstructor };
+  classes?: { Error: ServerlessErrorConstructor };
 }
 
 export type ConventionsConfig = {
