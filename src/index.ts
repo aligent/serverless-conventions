@@ -55,8 +55,8 @@ export default class ServerlessConventions implements ServerlessPlugin {
     this.conventionsConfig.ignore = this.conventionsConfig.ignore || {};
 
     // Notify user if they are using unsupported Serverless version
-    const version = parseFloat(this.serverless.getVersion());
-    if (version < 3) {
+    const version = this.serverless.getVersion();
+    if (parseFloat(version) < 3) {
       this.log.warning(
         `You are using an old Serverless version (${version}).\n` +
           `Please consider to upgrade Serverless or downgrade this plugin to v0.4.1`
@@ -125,8 +125,12 @@ export default class ServerlessConventions implements ServerlessPlugin {
 
     // If there were errors detected, print out a list and throw an error
     if (errors.length !== 0) {
+      errors.forEach((error) => {
+        this.log.error(chalk.red(error));
+      });
+
       throw new this.serverless.classes.Error(
-        'Serverless conventions validation failed!\n' + errors.join('\n')
+        'Serverless conventions validation failed!\n ✖ ' + errors.join('\n ✖ ')
       );
     }
 
@@ -146,21 +150,21 @@ export default class ServerlessConventions implements ServerlessPlugin {
     // Check that the service name is in kebab case
     if (serviceName !== kebabCase(serviceName)) {
       errors.push(
-        `✖ Warning: Service name "${serviceName}" is not kebab case (dash delimited)`
+        `Error: Service name "${serviceName}" is not kebab case (dash delimited)`
       );
     }
 
     // Check that the service name does not contain the word "service"
     if (serviceName.toLowerCase().includes('service')) {
       errors.push(
-        `✖ Warning: Service name "${serviceName}" should not include the word "service"`
+        `Error: Service name "${serviceName}" should not include the word "service"`
       );
     }
 
     // Check the length of the service name is not greater than x
     if (serviceName.length > 23) {
       errors.push(
-        `✖ Warning: Service name "${serviceName}" must be less than 23 characters`
+        `Error: Service name "${serviceName}" must be less than 23 characters`
       );
     }
 
@@ -177,15 +181,13 @@ export default class ServerlessConventions implements ServerlessPlugin {
     // Check that the stage name contains only lower case alphabet characters (a-z)
     if (stageName.match(/[^a-z]/)) {
       errors.push(
-        `✖ Warning: Stage name "${stageName}" should only contain alphabet characters in lower case`
+        `Error: Stage name "${stageName}" should only contain alphabet characters in lower case`
       );
     }
 
     // Check the length of the stage name is 3 characters
     if (stageName.length !== 3) {
-      errors.push(
-        `✖ Warning: Stage name "${stageName}" must be 3 characters long`
-      );
+      errors.push(`Error: Stage name "${stageName}" must be 3 characters long`);
     }
 
     return errors;
@@ -210,15 +212,13 @@ export default class ServerlessConventions implements ServerlessPlugin {
     // Check that the handler name is in kebab case
     if (handlerNameNoExtension !== kebabCase(handlerNameNoExtension)) {
       errors.push(
-        `✖ Warning: Handler "${handlerName}" is not kebab case (dash delimited)`
+        `Error: Handler "${handlerName}" is not kebab case (dash delimited)`
       );
     }
 
     // Check that the handler ends in .handler
     if (handlerNameNoExtension === handlerName) {
-      errors.push(
-        `✖ Warning: Handler "${handlerName}" does not end in ".handler"`
-      );
+      errors.push(`Error: Handler "${handlerName}" does not end in ".handler"`);
     }
 
     return errors;
@@ -236,7 +236,7 @@ export default class ServerlessConventions implements ServerlessPlugin {
 
     // Check that the function name is in camel case
     if (fnName !== undefined && fnName !== camelCase(fnName)) {
-      errors.push(`✖ Warning: Function "${fnName}" is not camel case`);
+      errors.push(`Error: Function "${fnName}" is not camel case`);
     }
 
     // Check the name hasn't been overwritten with a custom name parameter
@@ -247,7 +247,7 @@ export default class ServerlessConventions implements ServerlessPlugin {
     ].join('-');
     if (fn.name !== expectedFnName) {
       errors.push(
-        `✖ Warning: Function "${fnName}" is not using the default name. Remove the custom name property from the function.`
+        `Error: Function "${fnName}" is not using the default name. Remove the custom name property from the function.`
       );
     }
 
@@ -277,7 +277,7 @@ export default class ServerlessConventions implements ServerlessPlugin {
       kebabCase(fnName) !== kebabCase(handler)
     ) {
       errors.push(
-        `✖ Warning: Function "${fnName}" does not match handler name "${handler}.handler"`
+        `Error: Function "${fnName}" does not match handler name "${handler}.handler"`
       );
     }
 
@@ -302,14 +302,14 @@ export default class ServerlessConventions implements ServerlessPlugin {
 
     if (tableName == tableNameWithoutService) {
       errors.push(
-        `✖ Warning: DynamoDB table name "${tableName}" does not start with the service name`
+        `Error: DynamoDB table name "${tableName}" does not start with the service name`
       );
     }
 
     // Check that the function name is in snake case
     if (tableName !== kebabCase(tableName)) {
       errors.push(
-        `✖ Warning: DynamoDB table name "${tableName}" is not kebab case`
+        `Error: DynamoDB table name "${tableName}" is not kebab case`
       );
     }
 
@@ -333,7 +333,7 @@ export default class ServerlessConventions implements ServerlessPlugin {
 
     if (providerVersionNum !== esBuildVersionNum) {
       errors.push(
-        `✖ Warning: Provider node runtime version "${providerVersion}" does not match esbuild node version "${esBuildVersion}"`
+        `Error: Provider node runtime version "${providerVersion}" does not match esbuild node version "${esBuildVersion}"`
       );
     }
 
