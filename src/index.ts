@@ -1,33 +1,27 @@
-import Serverless from 'serverless';
-import { Options } from 'serverless';
 import chalk from 'chalk';
 import { camelCase, paramCase as kebabCase } from 'change-case';
-import Aws from 'serverless/plugins/aws/provider/awsProvider';
+import Serverless, { Options } from 'serverless';
+import type ServerlessPlugin from 'serverless/classes/Plugin';
 import Service from 'serverless/classes/Service';
+import Aws from 'serverless/plugins/aws/provider/awsProvider';
+import type { ConventionsConfig, ServerlessClasses } from './type/index';
 
-type ConventionsConfig = {
-  ignore: {
-    serviceName?: boolean;
-    stageName?: boolean;
-    handlerName?: boolean;
-    functionName?: boolean;
-    handlerNameMatchesFunction?: boolean;
-    dynamoDBTableName?: boolean;
-  };
-};
-
-export default class ServerlessConventions {
-  serverless: Serverless;
-  hooks: { [key: string]: Function };
-  commands: any;
-  config: any;
+export default class ServerlessConventions implements ServerlessPlugin {
+  serverless: ServerlessClasses;
+  hooks: ServerlessPlugin.Hooks;
+  commands: ServerlessPlugin.Commands;
   options: Options;
   conventionsConfig: ConventionsConfig;
+  log: ServerlessPlugin.Logging['log'];
 
-  constructor(serverless: Serverless, options: Options) {
+  constructor(
+    serverless: ServerlessClasses,
+    options: Options,
+    { log }: { log: ServerlessPlugin.Logging['log'] }
+  ) {
     this.serverless = serverless;
     this.options = options;
-    this.config = '';
+    this.log = log;
 
     this.commands = {
       'conventions-check': {
@@ -37,8 +31,9 @@ export default class ServerlessConventions {
     };
 
     this.hooks = {
-      'before:package:compileFunctions': this.initialize.bind(this),
-      'conventions-check:run': () => this.initialize(),
+      initialize: () => this.initialize(),
+      'before:package:compileFunctions': this.runConventionCheck.bind(this),
+      'conventions-check:run': () => this.runConventionCheck(),
     };
 
     this.serverless.configSchemaHandler.defineTopLevelProperty('conventions', {
@@ -47,7 +42,9 @@ export default class ServerlessConventions {
         ignore: { type: 'object' },
       },
     });
+  }
 
+  initialize() {
     // Make sure `conventionsConfig` is defined in case `serverless.yml` only has empty `conventions` block
     this.conventionsConfig = this.serverless.service.initialServerlessConfig
       .conventions || {
@@ -56,9 +53,18 @@ export default class ServerlessConventions {
 
     // Make sure `ignore` is defined in case `serverless.yml` has `conventions` with an empty `ignore` block
     this.conventionsConfig.ignore = this.conventionsConfig.ignore || {};
+
+    // Notify user if they are using unsupported Serverless version
+    const version = this.serverless.getVersion();
+    if (parseFloat(version) < 3) {
+      this.log.warning(
+        `You are using an old Serverless version (${version}).\n` +
+          `Please consider to upgrade Serverless or downgrade this plugin to v0.4.1`
+      );
+    }
   }
 
-  initialize() {
+  runConventionCheck() {
     // Check that all the conventions are followed and build a list of errors
     let errors: Array<string> = [];
 
@@ -120,13 +126,15 @@ export default class ServerlessConventions {
     // If there were errors detected, print out a list and throw an error
     if (errors.length !== 0) {
       errors.forEach((error) => {
-        this.serverless.cli.log(chalk.red(error));
+        this.log.error(chalk.red(error));
       });
 
-      throw Error('Serverless conventions validation failed');
+      throw new this.serverless.classes.Error(
+        'Serverless conventions validation failed!\n ✖ ' + errors.join('\n ✖ ')
+      );
     }
 
-    this.serverless.cli.log(
+    this.log.success(
       chalk.green('Conventions check complete! No errors were found.')
     );
   }
@@ -142,21 +150,21 @@ export default class ServerlessConventions {
     // Check that the service name is in kebab case
     if (serviceName !== kebabCase(serviceName)) {
       errors.push(
-        `Warning: Service name "${serviceName}" is not kebab case (dash delimited)`
+        `Error: Service name "${serviceName}" is not kebab case (dash delimited)`
       );
     }
 
     // Check that the service name does not contain the word "service"
     if (serviceName.toLowerCase().includes('service')) {
       errors.push(
-        `Warning: Service name "${serviceName}" should not include the word "service"`
+        `Error: Service name "${serviceName}" should not include the word "service"`
       );
     }
 
     // Check the length of the service name is not greater than x
     if (serviceName.length > 23) {
       errors.push(
-        `Warning: Service name "${serviceName}" must be less than 23 characters`
+        `Error: Service name "${serviceName}" must be less than 23 characters`
       );
     }
 
@@ -173,15 +181,13 @@ export default class ServerlessConventions {
     // Check that the stage name contains only lower case alphabet characters (a-z)
     if (stageName.match(/[^a-z]/)) {
       errors.push(
-        `Warning: Stage name "${stageName}" should only contain alphabet characters in lower case`
+        `Error: Stage name "${stageName}" should only contain alphabet characters in lower case`
       );
     }
 
     // Check the length of the stage name is 3 characters
     if (stageName.length !== 3) {
-      errors.push(
-        `Warning: Stage name "${stageName}" must be 3 characters long`
-      );
+      errors.push(`Error: Stage name "${stageName}" must be 3 characters long`);
     }
 
     return errors;
@@ -206,15 +212,13 @@ export default class ServerlessConventions {
     // Check that the handler name is in kebab case
     if (handlerNameNoExtension !== kebabCase(handlerNameNoExtension)) {
       errors.push(
-        `Warning: Handler "${handlerName}" is not kebab case (dash delimited)`
+        `Error: Handler "${handlerName}" is not kebab case (dash delimited)`
       );
     }
 
     // Check that the handler ends in .handler
     if (handlerNameNoExtension === handlerName) {
-      errors.push(
-        `Warning: Handler "${handlerName}" does not end in ".handler"`
-      );
+      errors.push(`Error: Handler "${handlerName}" does not end in ".handler"`);
     }
 
     return errors;
@@ -232,7 +236,7 @@ export default class ServerlessConventions {
 
     // Check that the function name is in camel case
     if (fnName !== undefined && fnName !== camelCase(fnName)) {
-      errors.push(`Warning: Function "${fnName}" is not camel case`);
+      errors.push(`Error: Function "${fnName}" is not camel case`);
     }
 
     // Check the name hasn't been overwritten with a custom name parameter
@@ -243,7 +247,7 @@ export default class ServerlessConventions {
     ].join('-');
     if (fn.name !== expectedFnName) {
       errors.push(
-        `Warning: Function "${fnName}" is not using the default name. Remove the custom name property from the function.`
+        `Error: Function "${fnName}" is not using the default name. Remove the custom name property from the function.`
       );
     }
 
@@ -273,7 +277,7 @@ export default class ServerlessConventions {
       kebabCase(fnName) !== kebabCase(handler)
     ) {
       errors.push(
-        `Warning: Function "${fnName}" does not match handler name "${handler}.handler"`
+        `Error: Function "${fnName}" does not match handler name "${handler}.handler"`
       );
     }
 
@@ -298,14 +302,14 @@ export default class ServerlessConventions {
 
     if (tableName == tableNameWithoutService) {
       errors.push(
-        `Warning: DynamoDB table name "${tableName}" does not start with the service name`
+        `Error: DynamoDB table name "${tableName}" does not start with the service name`
       );
     }
 
     // Check that the function name is in snake case
     if (tableName !== kebabCase(tableName)) {
       errors.push(
-        `Warning: DynamoDB table name "${tableName}" is not kebab case`
+        `Error: DynamoDB table name "${tableName}" is not kebab case`
       );
     }
 
@@ -329,7 +333,7 @@ export default class ServerlessConventions {
 
     if (providerVersionNum !== esBuildVersionNum) {
       errors.push(
-        `Warning: Provider node runtime version "${providerVersion}" does not match esbuild node version "${esBuildVersion}"`
+        `Error: Provider node runtime version "${providerVersion}" does not match esbuild node version "${esBuildVersion}"`
       );
     }
 
