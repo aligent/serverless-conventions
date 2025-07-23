@@ -1,7 +1,7 @@
 import Serverless from 'serverless';
 
 interface ServerlessError extends Error {
-  code: string;
+  code?: string;
 }
 
 export interface ServerlessErrorConstructor {
@@ -11,7 +11,7 @@ export interface ServerlessErrorConstructor {
 }
 
 export type ServerlessClasses = Serverless & {
-  classes?: { Error: ServerlessErrorConstructor };
+  classes?: { Error: any };
 }
 
 export type ConventionsConfig = {
