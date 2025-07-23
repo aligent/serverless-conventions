@@ -75,7 +75,7 @@ function createExampleServerless(stage = 'tst'): ServerlessClasses {
     ]);
   serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
-  return serverless;
+  return serverless as ServerlessClasses;
 }
 
 function createServerlessConvention(
@@ -173,9 +173,9 @@ describe('Test conventions plugin', () => {
         'BadStageName',
         serverless
       );
-      // Run the initialize function
+      // Run the convention check function
       expect(() => {
-        BadServerlessConvention.initialize();
+        BadServerlessConvention.runConventionCheck();
       }).toThrow();
     });
 
