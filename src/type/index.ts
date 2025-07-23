@@ -10,7 +10,7 @@ export interface ServerlessErrorConstructor {
   readonly prototype: ServerlessError;
 }
 
-export interface ServerlessClasses extends Serverless {
+export type ServerlessClasses = Serverless & {
   classes?: { Error: ServerlessErrorConstructor };
 }
 
