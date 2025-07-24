@@ -25,7 +25,10 @@ function createExampleServerless(stage = 'tst'): ServerlessClasses {
     log: jest.fn(),
   };
 
-  let serverless: ServerlessClasses = new Serverless({ options, commands: [] });
+  let serverless: Serverless = new Serverless({
+    commands: [],
+    options: options
+  });
 
   serverless.cli = cli;
   serverless.service.provider.stage = stage;
@@ -72,7 +75,7 @@ function createExampleServerless(stage = 'tst'): ServerlessClasses {
     ]);
   serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
-  return serverless;
+  return serverless as ServerlessClasses;
 }
 
 function createServerlessConvention(
@@ -113,8 +116,8 @@ describe('Test conventions plugin', () => {
       let ServerlessConvention = createServerlessConvention();
       // Run the initialize function
       expect(() => {
-        ServerlessConvention.runConventionCheck();
-      }).not.toThrowError();
+        ServerlessConvention.initialize();
+      }).not.toThrow();
     });
 
     test('Initialize function valid serverless.yml without resources', async () => {
@@ -124,8 +127,8 @@ describe('Test conventions plugin', () => {
 
       // Run the initialize function
       expect(() => {
-        ServerlessConvention.runConventionCheck();
-      }).not.toThrowError();
+        ServerlessConvention.initialize();
+      }).not.toThrow();
     });
 
     test('Initialize function invalid serverless.yml', async () => {
@@ -170,10 +173,10 @@ describe('Test conventions plugin', () => {
         'BadStageName',
         serverless
       );
-      // Run the initialize function
+      // Run the convention check function
       expect(() => {
         BadServerlessConvention.runConventionCheck();
-      }).toThrowError();
+      }).toThrow();
     });
 
     test('Initialize function with all ignore fields set to true', async () => {
@@ -190,8 +193,8 @@ describe('Test conventions plugin', () => {
       };
 
       expect(() => {
-        ServerlessConvention.runConventionCheck();
-      }).not.toThrowError();
+        ServerlessConvention.initialize();
+      }).not.toThrow();
     });
 
     test('Initialize function with no ignore fields', async () => {
@@ -201,8 +204,8 @@ describe('Test conventions plugin', () => {
       };
 
       expect(() => {
-        ServerlessConvention.runConventionCheck();
-      }).not.toThrowError();
+        ServerlessConvention.initialize();
+      }).not.toThrow();
     });
 
     test('Initialize function ignore stage name check', async () => {
@@ -213,8 +216,8 @@ describe('Test conventions plugin', () => {
       ServerlessConvention.conventionsConfig.ignore.stageName = true;
 
       expect(() => {
-        ServerlessConvention.runConventionCheck();
-      }).not.toThrowError();
+        ServerlessConvention.initialize();
+      }).not.toThrow();
     });
 
     test('Initialize function ignore handler name check', async () => {
@@ -244,7 +247,7 @@ describe('Test conventions plugin', () => {
 
       expect(() => {
         ServerlessConvention.initialize();
-      }).not.toThrowError();
+      }).not.toThrow();
     });
   });
 
