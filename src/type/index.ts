@@ -1,17 +1,8 @@
 import Serverless from 'serverless';
-
-interface ServerlessError extends Error {
-  code?: string;
-}
-
-export interface ServerlessErrorConstructor {
-  new (message?: string): ServerlessError;
-  (message?: string): ServerlessError;
-  readonly prototype: ServerlessError;
-}
+import ServerlessError from 'serverless/classes/ServerlessError';
 
 export type ServerlessClasses = Serverless & {
-  classes?: { Error: any };
+  classes?: { Error: typeof ServerlessError };
 }
 
 export type ConventionsConfig = {
