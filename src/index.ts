@@ -56,10 +56,10 @@ export default class ServerlessConventions implements ServerlessPlugin {
 
     // Notify user if they are using unsupported Serverless version
     const version = this.serverless.getVersion();
-    if (parseFloat(version) < 3) {
+    if (parseFloat(version) < 4) {
       this.log.warning(
         `You are using an old Serverless version (${version}).\n` +
-          `Please consider to upgrade Serverless or downgrade this plugin to v0.4.1`
+          `Please consider upgrading Serverless to v4 or downgrade this plugin to v1.0.0`
       );
     }
   }
