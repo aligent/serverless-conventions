@@ -1,8 +1,60 @@
-import Serverless from 'serverless';
+import type Serverless from 'serverless';
 import type ServerlessPlugin from 'serverless/classes/Plugin';
-import { CloudFormationResource } from 'serverless/plugins/aws/provider/awsProvider';
+import type { CloudFormationResource } from 'serverless/plugins/aws/provider/awsProvider';
 import ServerlessConventions from '../src/index';
 import { ServerlessClasses } from '../src/type';
+
+// Mock Serverless object factory
+function createMockServerless(options: Serverless.Options): ServerlessClasses {
+  const mockServerless = {
+    cli: {
+      log: jest.fn(),
+    },
+    getVersion: jest.fn().mockReturnValue('4.0.0'),
+    configSchemaHandler: {
+      defineTopLevelProperty: jest.fn(),
+      defineFunctionEvent: jest.fn(),
+      defineFunctionEventProperties: jest.fn(),
+      defineFunctionProperties: jest.fn(),
+      defineProvider: jest.fn(),
+      defineCustomProperties: jest.fn(),
+    },
+    service: {
+      provider: {
+        compiledCloudFormationTemplate: {
+          Resources: {},
+        },
+        name: 'aws',
+        stage: options.stage || 'tst',
+        region: options.region || 'ap-southeast-2',
+        versionFunctions: false,
+        runtime: 'nodejs24.x',
+      },
+      custom: {
+        esbuild: {
+          target: 'node24',
+        },
+      },
+      initialServerlessConfig: {},
+      getServiceName: jest.fn().mockReturnValue('test-name'),
+      getAllFunctions: jest.fn().mockReturnValue([]),
+      getFunction: jest.fn(),
+    },
+    resources: {
+      Resources: {},
+    },
+    classes: {
+      Error: class ServerlessError extends Error {
+        constructor(message: string) {
+          super(message);
+          this.name = 'ServerlessError';
+        }
+      },
+    },
+  } as unknown as ServerlessClasses;
+
+  return mockServerless;
+}
 
 function formatServiceName(
   name: string,
@@ -20,35 +72,10 @@ function createExampleServerless(stage = 'tst'): ServerlessClasses {
     region: 'ap-southeast-2',
   };
 
-  // Log any cli events to jest
-  const cli = {
-    log: jest.fn(),
-  };
+  const serverless = createMockServerless(options);
 
-  let serverless: Serverless = new Serverless({
-    commands: [],
-    options: options
-  });
-
-  serverless.cli = cli;
+  // Update stage if different from default
   serverless.service.provider.stage = stage;
-  serverless.service.initialServerlessConfig = {};
-  // Return a service name
-  serverless.service.getServiceName = jest.fn().mockReturnValue('test-name');
-  // Set some basic provider information
-  serverless.service.provider = {
-    compiledCloudFormationTemplate: {
-      Resources: {},
-    },
-    name: 'aws',
-    stage: 'tst',
-    region: 'ap-southeast-2',
-    versionFunctions: false,
-    runtime: 'nodejs14.x',
-  } as any;
-  serverless.service.custom.esbuild = {
-    target: 'node14',
-  };
 
   // Create some example resources
   const resource: CloudFormationResource = {
@@ -62,7 +89,7 @@ function createExampleServerless(stage = 'tst'): ServerlessClasses {
   };
 
   // A good function and handler name
-  let fn: Serverless.FunctionDefinitionHandler = {
+  const fn: Serverless.FunctionDefinitionHandler = {
     name: formatServiceName('thisIsAWellNamedFunction', serverless),
     handler: 'src/this-is-a-well-named-function.handler',
     events: [],
@@ -75,7 +102,7 @@ function createExampleServerless(stage = 'tst'): ServerlessClasses {
     ]);
   serverless.service.getFunction = jest.fn().mockReturnValue(fn);
 
-  return serverless as ServerlessClasses;
+  return serverless;
 }
 
 function createServerlessConvention(

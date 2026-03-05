@@ -59,7 +59,7 @@ export default class ServerlessConventions implements ServerlessPlugin {
     if (parseFloat(version) < 3) {
       this.log.warning(
         `You are using an old Serverless version (${version}).\n` +
-          `Please consider to upgrade Serverless or downgrade this plugin to v0.4.1`
+          `Please consider upgrading Serverless to v3 or downgrade this plugin to v0.4.1`
       );
     }
   }
